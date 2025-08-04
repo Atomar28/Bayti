@@ -2,6 +2,8 @@
 
 This is a full-stack web application for managing AI-powered calling agent operations. The system provides a comprehensive dashboard for tracking call logs, managing leads, analyzing performance metrics, and configuring agent settings. Built as a modern single-page application with real-time data management capabilities for sales and lead generation workflows.
 
+**NEW**: Added a premium marketing landing page with Apple-inspired design, glassmorphism effects, smooth animations, and conversion-optimized layout for lead generation.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

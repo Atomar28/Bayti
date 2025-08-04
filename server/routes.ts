@@ -255,6 +255,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Landing page route
+  app.get("/landing", (req, res) => {
+    res.sendFile("landing.html", { root: "client" });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
