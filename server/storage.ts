@@ -194,7 +194,7 @@ export class DatabaseStorage implements IStorage {
       .update(callScripts)
       .set({ isActive: false })
       .where(eq(callScripts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getAgentSettings(agentId: string): Promise<AgentSettings | undefined> {
@@ -206,9 +206,10 @@ export class DatabaseStorage implements IStorage {
     const existingSettings = await this.getAgentSettings(insertSettings.agentId!);
     
     if (existingSettings) {
+      const updateData = { ...insertSettings, updatedAt: new Date() };
       const [settings] = await db
         .update(agentSettings)
-        .set({ ...insertSettings, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(agentSettings.agentId, insertSettings.agentId!))
         .returning();
       return settings;

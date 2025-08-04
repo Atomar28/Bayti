@@ -43,8 +43,8 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
               
               return (
                 <Link key={item.name} href={item.href}>
-                  <a
-                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                  <div
+                    className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer ${
                       active
                         ? "bg-brand-50 border-r-2 border-brand-500 text-brand-700"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -57,7 +57,7 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
                       }`}
                     />
                     {item.name}
-                  </a>
+                  </div>
                 </Link>
               );
             })}

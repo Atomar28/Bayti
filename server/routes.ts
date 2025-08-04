@@ -16,7 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.getCallLogs(page, limit, search, status);
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch call logs", error: error.message });
+      res.status(500).json({ message: "Failed to fetch call logs", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(callLog);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch call log", error: error.message });
+      res.status(500).json({ message: "Failed to fetch call log", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create call log", error: error.message });
+      res.status(500).json({ message: "Failed to create call log", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -57,7 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update call log", error: error.message });
+      res.status(500).json({ message: "Failed to update call log", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.getLeads(page, limit);
       res.json(result);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch leads", error: error.message });
+      res.status(500).json({ message: "Failed to fetch leads", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(lead);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch lead", error: error.message });
+      res.status(500).json({ message: "Failed to fetch lead", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create lead", error: error.message });
+      res.status(500).json({ message: "Failed to create lead", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -111,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update lead", error: error.message });
+      res.status(500).json({ message: "Failed to update lead", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const scripts = await storage.getCallScripts();
       res.json(scripts);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch call scripts", error: error.message });
+      res.status(500).json({ message: "Failed to fetch call scripts", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create call script", error: error.message });
+      res.status(500).json({ message: "Failed to create call script", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update call script", error: error.message });
+      res.status(500).json({ message: "Failed to update call script", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Call script deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete call script", error: error.message });
+      res.status(500).json({ message: "Failed to delete call script", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(settings);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch agent settings", error: error.message });
+      res.status(500).json({ message: "Failed to fetch agent settings", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to save agent settings", error: error.message });
+      res.status(500).json({ message: "Failed to save agent settings", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -198,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getCallStats();
       res.json(stats);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch stats", error: error.message });
+      res.status(500).json({ message: "Failed to fetch stats", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Disposition', 'attachment; filename=call-logs.csv');
       res.send(csv);
     } catch (error) {
-      res.status(500).json({ message: "Failed to export call logs", error: error.message });
+      res.status(500).json({ message: "Failed to export call logs", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
       res.send(csv);
     } catch (error) {
-      res.status(500).json({ message: "Failed to export leads", error: error.message });
+      res.status(500).json({ message: "Failed to export leads", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

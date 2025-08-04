@@ -117,7 +117,7 @@ export default function Settings() {
               <div>
                 <Label htmlFor="voiceType">Voice Type</Label>
                 <Select
-                  value={agentSettings.voiceType}
+                  value={agentSettings.voiceType || ""}
                   onValueChange={(value) =>
                     setAgentSettings({ ...agentSettings, voiceType: value })
                   }

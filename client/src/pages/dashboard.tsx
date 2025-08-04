@@ -18,8 +18,8 @@ export default function Dashboard() {
     queryKey: ["/api/call-scripts"],
   });
 
-  const recentCalls = recentCallsData?.callLogs || [];
-  const scripts = scriptsData || [];
+  const recentCalls = (recentCallsData as any)?.callLogs || [];
+  const scripts = (scriptsData as any) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -66,28 +66,28 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Total Calls Today"
-          value={stats?.totalCallsToday || 0}
+          value={(stats as any)?.totalCallsToday || 0}
           icon={Phone}
           iconColor="text-green-600"
           iconBgColor="bg-green-100"
         />
         <StatsCard
           title="Qualified Leads"
-          value={stats?.qualifiedLeads || 0}
+          value={(stats as any)?.qualifiedLeads || 0}
           icon={UserPlus}
           iconColor="text-blue-600"
           iconBgColor="bg-blue-100"
         />
         <StatsCard
           title="Avg Call Duration"
-          value={stats?.avgDuration ? formatDuration(stats.avgDuration) : "0:00"}
+          value={(stats as any)?.avgDuration ? formatDuration((stats as any).avgDuration) : "0:00"}
           icon={Clock}
           iconColor="text-amber-600"
           iconBgColor="bg-amber-100"
         />
         <StatsCard
           title="Success Rate"
-          value={`${stats?.successRate || 0}%`}
+          value={`${(stats as any)?.successRate || 0}%`}
           icon={Percent}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
@@ -113,7 +113,7 @@ export default function Dashboard() {
               <p className="text-gray-500 text-center py-4">No recent calls</p>
             ) : (
               <div className="space-y-4">
-                {recentCalls.map((call) => (
+                {recentCalls.map((call: any) => (
                   <div key={call.id} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className={`w-2 h-2 rounded-full mr-3 ${
@@ -154,7 +154,7 @@ export default function Dashboard() {
               <p className="text-gray-500 text-center py-4">No call scripts available</p>
             ) : (
               <div className="space-y-4">
-                {scripts.slice(0, 3).map((script) => (
+                {scripts.slice(0, 3).map((script: any) => (
                   <div key={script.id} className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-900">{script.name}</p>

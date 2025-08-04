@@ -67,8 +67,8 @@ export default function CallLogs() {
     },
   });
 
-  const callLogs = callLogsData?.callLogs || [];
-  const total = callLogsData?.total || 0;
+  const callLogs = (callLogsData as any)?.callLogs || [];
+  const total = (callLogsData as any)?.total || 0;
   const totalPages = Math.ceil(total / 10);
 
   const getStatusColor = (status: string) => {
@@ -201,7 +201,7 @@ export default function CallLogs() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  callLogs.map((call) => (
+                  callLogs.map((call: any) => (
                     <TableRow key={call.id}>
                       <TableCell>
                         <div>

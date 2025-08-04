@@ -73,7 +73,7 @@ export default function Analytics() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Lead Qualification Rate</span>
-                <span className="text-sm font-medium text-gray-900">{stats?.successRate || 0}%</span>
+                <span className="text-sm font-medium text-gray-900">{(stats as any)?.successRate || 0}%</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Average Call Duration</span>

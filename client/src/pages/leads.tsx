@@ -44,7 +44,7 @@ export default function Leads() {
     },
   });
 
-  const leads = leadsData?.leads || [];
+  const leads = (leadsData as any)?.leads || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
