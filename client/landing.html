@@ -74,6 +74,18 @@
         
         .hero-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+        
+        .hero-gradient::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent 0%, rgba(249, 250, 251, 0.8) 70%, rgba(249, 250, 251, 1) 100%);
+            pointer-events: none;
         }
         
         .card-hover {
@@ -161,7 +173,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="min-h-screen hero-gradient flex items-center justify-center relative overflow-hidden">
+    <section class="h-screen hero-gradient flex items-center justify-center relative overflow-hidden">
         <!-- Animated background elements -->
         <div class="absolute inset-0">
             <div class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
@@ -214,7 +226,7 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 bg-gray-50">
+    <section id="features" class="pt-32 pb-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -729,15 +741,19 @@
             });
         });
 
-        // Add scroll-triggered animations
+        // Smooth scroll behavior
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
-            const parallaxElements = document.querySelectorAll('.hero-gradient');
+            const windowHeight = window.innerHeight;
             
-            parallaxElements.forEach(element => {
-                const speed = 0.5;
-                element.style.transform = `translateY(${scrolled * speed}px)`;
-            });
+            // Only apply parallax effect within the hero section
+            if (scrolled < windowHeight) {
+                const parallaxElements = document.querySelectorAll('.hero-gradient');
+                parallaxElements.forEach(element => {
+                    const speed = 0.3;
+                    element.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+            }
         });
     </script>
 </body>
