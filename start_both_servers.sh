@@ -8,10 +8,10 @@ echo "Starting Bayti AI Calling Backend..."
 pkill -f "python.*start.py" 2>/dev/null || true
 pkill -f "uvicorn" 2>/dev/null || true
 
-# Start Python FastAPI server with supervisor in background
+# Start Python FastAPI server in background
 cd ai_backend 
-echo "Starting Python FastAPI server with supervisor on port 8000..."
-nohup python3 supervisor.py > /tmp/ai_backend.log 2>&1 &
+echo "Starting Python FastAPI server on port 8000..."
+nohup python3 simple_server.py > /tmp/ai_backend.log 2>&1 &
 PYTHON_PID=$!
 
 # Wait for Python server to start

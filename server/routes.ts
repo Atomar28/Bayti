@@ -256,17 +256,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Calling Integration - Proxy to Python backend
+  // AI Calling Integration - Direct Node.js implementation
   app.post("/api/ai/make-test-call", async (req, res) => {
     try {
-      const response = await fetch("http://localhost:8000/make-test-call", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req.body)
-      });
+      const { to_number } = req.body;
       
-      const result = await response.json();
-      res.json(result);
+      if (!to_number) {
+        return res.status(400).json({ error: "Phone number required" });
+      }
+
+      // Import Twilio
+      const twilio = require('twilio');
+      const client = twilio(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN
+      );
+
+      // Get the current replit domain for webhook URL
+      const replit_domain = process.env.REPLIT_DOMAINS?.split(",")[0];
+      if (!replit_domain) {
+        return res.status(500).json({ error: "Replit domain not configured" });
+      }
+      
+      const webhook_url = `https://${replit_domain}/api/ai/incoming-call`;
+
+      console.log(`Making call to ${to_number} with webhook URL: ${webhook_url}`);
+
+      const call = await client.calls.create({
+        url: webhook_url,
+        to: to_number,
+        from: process.env.TWILIO_PHONE_NUMBER
+      });
+
+      // Store call in database
+      await storage.createCallLog({
+        phoneNumber: to_number,
+        status: 'initiated',
+        startTime: new Date(),
+        callType: 'test_call',
+        notes: `Test call initiated via Twilio SID: ${call.sid}`
+      });
+
+      res.json({
+        message: "Test call initiated successfully",
+        call_sid: call.sid,
+        status: "initiated"
+      });
+
     } catch (error) {
       console.error("Test call error:", error);
       res.status(500).json({ message: "Failed to make test call", error: error instanceof Error ? error.message : String(error) });
@@ -275,16 +311,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/ai/call-logs", async (req, res) => {
     try {
-      const response = await fetch("http://localhost:8000/call-logs");
-      const result = await response.json();
-      res.json(result);
+      // Get AI call logs from main database - filter for test calls
+      const result = await storage.getCallLogs(1, 50, undefined, undefined);
+      
+      // Format for AI calling dashboard
+      const aiCalls = result.callLogs
+        .filter(log => log.callType === 'test_call' || log.notes?.includes('Bayti AI'))
+        .map(log => ({
+          id: log.id,
+          caller_number: log.phoneNumber,
+          call_status: log.status,
+          created_at: log.startTime,
+          duration: log.duration || 0,
+          transcription: log.notes || '',
+          ai_response: 'Real estate assistance provided'
+        }));
+
+      res.json({ calls: aiCalls });
     } catch (error) {
       console.error("AI call logs error:", error);
       res.status(500).json({ message: "Failed to fetch AI call logs", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
-  // Incoming Call Webhook endpoint  
+  // Twilio webhook for incoming calls
+  app.post("/api/ai/incoming-call", async (req, res) => {
+    try {
+      const { CallSid, From, To } = req.body;
+      
+      console.log(`Incoming call from ${From}, SID: ${CallSid}`);
+
+      // Store call in database
+      await storage.createCallLog({
+        phoneNumber: From,
+        status: 'incoming',
+        startTime: new Date(),
+        callType: 'test_call',
+        notes: `Bayti AI call from ${From}, SID: ${CallSid}`
+      });
+
+      // Return TwiML response for AI conversation
+      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Gather input="speech dtmf" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
+        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. Please press any key to continue our conversation, then tell me how I can help you today.</Say>
+    </Gather>
+    <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak.</Say>
+    <Hangup/>
+</Response>`;
+
+      res.set('Content-Type', 'application/xml');
+      res.send(twimlResponse);
+
+    } catch (error) {
+      console.error('Incoming call error:', error);
+      res.status(500).send('Error processing call');
+    }
+  });
+
+  app.post("/api/ai/process-speech", async (req, res) => {
+    try {
+      const { CallSid, SpeechResult } = req.body;
+      const call_sid = req.query.call_sid;
+      
+      console.log(`Processing speech for call ${call_sid}: ${SpeechResult}`);
+
+      if (!SpeechResult) {
+        // No speech detected, ask again
+        const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Gather input="speech dtmf" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+        <Say voice="Polly.Joanna">I didn't catch that. Could you please repeat your question?</Say>
+    </Gather>
+    <Hangup/>
+</Response>`;
+
+        res.set('Content-Type', 'application/xml');
+        return res.send(twimlResponse);
+      }
+
+      // For now, provide a simple real estate response
+      const aiResponse = "Thank you for your interest in real estate! I'd be happy to help you find properties in your area. What type of home are you looking for and in which neighborhood?";
+
+      // Find and update the call log
+      const result = await storage.getCallLogs(1, 100);
+      const callLog = result.callLogs.find(log => log.notes?.includes(call_sid));
+      
+      if (callLog) {
+        await storage.updateCallLog(callLog.id, {
+          status: 'completed',
+          notes: `${callLog.notes}\nTranscription: ${SpeechResult}\nAI Response: ${aiResponse}`
+        });
+      }
+
+      // Return TwiML with AI response
+      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="Polly.Joanna">${aiResponse}</Say>
+    <Hangup/>
+</Response>`;
+
+      res.set('Content-Type', 'application/xml');
+      res.send(twimlResponse);
+
+    } catch (error) {
+      console.error('Speech processing error:', error);
+      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="Polly.Joanna">I'm sorry, I'm having trouble processing your request. Please try calling back later.</Say>
+    <Hangup/>
+</Response>`;
+      res.set('Content-Type', 'application/xml');
+      res.send(twimlResponse);
+    }
+  });
+
+  // Keep original webhook endpoint for backwards compatibility 
   app.post("/api/incoming-call", async (req, res) => {
     try {
       console.log("Incoming call webhook received:", req.body);
