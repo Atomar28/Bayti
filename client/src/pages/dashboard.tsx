@@ -3,8 +3,10 @@ import StatsCard from "@/components/ui/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, UserPlus, Clock, Percent, TrendingUp, Users, Calendar, Play, Settings, ChevronRight } from "lucide-react";
+import { Phone, UserPlus, Clock, Percent, TrendingUp, Users, Calendar, Play, Settings, ChevronRight, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { TestCallDialog } from "@/components/ai/TestCallDialog";
+import { AICallLogs } from "@/components/ai/AICallLogs";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -72,10 +74,12 @@ export default function Dashboard() {
               <p className="mt-1 text-lg text-gray-600">Here's your call center overview for today</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
-                <Play className="w-4 h-4 mr-2" />
-                Start New Call
-              </Button>
+              <TestCallDialog>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Start Test Call
+                </Button>
+              </TestCallDialog>
               <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200">
                 <Settings className="w-4 h-4 mr-2" />
                 Quick Setup
@@ -177,6 +181,8 @@ export default function Dashboard() {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* AI Call Logs Section */}
+        <AICallLogs />
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">

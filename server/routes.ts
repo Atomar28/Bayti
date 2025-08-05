@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertCallLogSchema, insertLeadSchema, insertCallScriptSchema, insertAgentSettingsSchema } from "@shared/schema";
 import { z } from "zod";
+import fetch from "node-fetch";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Call Logs endpoints
@@ -255,7 +256,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Incoming Call Webhook endpoint
+  // AI Calling Integration - Proxy to Python backend
+  app.post("/api/ai/make-test-call", async (req, res) => {
+    try {
+      const response = await fetch("http://localhost:8000/make-test-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req.body)
+      });
+      
+      const result = await response.json();
+      res.json(result);
+    } catch (error) {
+      console.error("Test call error:", error);
+      res.status(500).json({ message: "Failed to make test call", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/ai/call-logs", async (req, res) => {
+    try {
+      const response = await fetch("http://localhost:8000/call-logs");
+      const result = await response.json();
+      res.json(result);
+    } catch (error) {
+      console.error("AI call logs error:", error);
+      res.status(500).json({ message: "Failed to fetch AI call logs", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // Incoming Call Webhook endpoint  
   app.post("/api/incoming-call", async (req, res) => {
     try {
       console.log("Incoming call webhook received:", req.body);
