@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertCallLogSchema, insertLeadSchema, insertCallScriptSchema, insertAgentSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import fetch from "node-fetch";
+import twilio from "twilio";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Call Logs endpoints
@@ -265,8 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Phone number required" });
       }
 
-      // Import Twilio
-      const twilio = require('twilio');
+      // Initialize Twilio client
       const client = twilio(
         process.env.TWILIO_ACCOUNT_SID,
         process.env.TWILIO_AUTH_TOKEN
@@ -285,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const call = await client.calls.create({
         url: webhook_url,
         to: to_number,
-        from: process.env.TWILIO_PHONE_NUMBER
+        from: process.env.TWILIO_PHONE_NUMBER || ""
       });
 
       // Store call in database
@@ -293,7 +293,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber: to_number,
         status: 'initiated',
         startTime: new Date(),
-        callType: 'test_call',
         notes: `Test call initiated via Twilio SID: ${call.sid}`
       });
 
@@ -316,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Format for AI calling dashboard
       const aiCalls = result.callLogs
-        .filter(log => log.callType === 'test_call' || log.notes?.includes('Bayti AI'))
+        .filter(log => log.notes?.includes('Bayti AI') || log.notes?.includes('Test call'))
         .map(log => ({
           id: log.id,
           caller_number: log.phoneNumber,
@@ -346,7 +345,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber: From,
         status: 'incoming',
         startTime: new Date(),
-        callType: 'test_call',
         notes: `Bayti AI call from ${From}, SID: ${CallSid}`
       });
 
@@ -372,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/process-speech", async (req, res) => {
     try {
       const { CallSid, SpeechResult } = req.body;
-      const call_sid = req.query.call_sid;
+      const call_sid = req.query.call_sid as string;
       
       console.log(`Processing speech for call ${call_sid}: ${SpeechResult}`);
 
