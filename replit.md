@@ -10,7 +10,7 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 - Real-time call logs and conversation tracking
 - Premium Apple-inspired UI design with glassmorphism effects
 
-**Recent Integration**: Successfully deployed dual-server architecture (Node.js + Python FastAPI) for full AI calling capabilities with Twilio webhooks, OpenAI Whisper transcription, GPT-4o mini responses, and ElevenLabs voice synthesis.
+**Recent Integration**: Successfully deployed dual-server architecture (Node.js + Python FastAPI) for full AI calling capabilities with Twilio webhooks, OpenAI Whisper transcription, GPT-4o mini responses, and ElevenLabs voice synthesis. Created startup script `start_ai_backend.py` to maintain Python backend stability.
 
 # User Preferences
 
