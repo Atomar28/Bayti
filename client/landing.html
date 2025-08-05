@@ -34,19 +34,19 @@
                         }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.4s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
-                        'slide-in-left': 'slideInLeft 0.4s ease-out',
-                        'slide-in-right': 'slideInRight 0.4s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                        'slide-up': 'slideUp 1s ease-out',
+                        'slide-in-left': 'slideInLeft 0.8s ease-out',
+                        'slide-in-right': 'slideInRight 0.8s ease-out',
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'fade-in-up': 'fadeInUp 0.3s ease-out',
-                        'stagger-1': 'fadeInUp 0.3s ease-out 0.05s both',
-                        'stagger-2': 'fadeInUp 0.3s ease-out 0.1s both',
-                        'stagger-3': 'fadeInUp 0.3s ease-out 0.15s both',
-                        'stagger-4': 'fadeInUp 0.3s ease-out 0.2s both',
-                        'stagger-5': 'fadeInUp 0.3s ease-out 0.25s both',
-                        'stagger-6': 'fadeInUp 0.3s ease-out 0.3s both',
+                        'fade-in-up': 'fadeInUp 0.6s ease-out',
+                        'stagger-1': 'fadeInUp 0.6s ease-out 0.1s both',
+                        'stagger-2': 'fadeInUp 0.6s ease-out 0.2s both',
+                        'stagger-3': 'fadeInUp 0.6s ease-out 0.3s both',
+                        'stagger-4': 'fadeInUp 0.6s ease-out 0.4s both',
+                        'stagger-5': 'fadeInUp 0.6s ease-out 0.5s both',
+                        'stagger-6': 'fadeInUp 0.6s ease-out 0.6s both',
                     },
                     keyframes: {
                         fadeIn: {
@@ -158,12 +158,7 @@
         }
         
         .card-hover {
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        /* Immediate visibility for critical elements */
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
         .card-hover:hover {
@@ -362,7 +357,7 @@
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4 animate-slide-in-left">
                     Powerful&nbsp;Features&nbsp;for&nbsp;<span class="text-blue-600 font-extrabold animate-slide-in-right">Modern&nbsp;Agents</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in-up prose-enhanced" style="animation-delay: 0.15s; animation-fill-mode: both;">
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in-up prose-enhanced" style="animation-delay: 0.3s; animation-fill-mode: both;">
                     Everything you need to automate your real estate operations and scale your business to new heights.
                 </p>
             </div>
@@ -866,10 +861,10 @@
             event.target.reset();
         }
 
-        // Enhanced Intersection Observer for fast animations
+        // Enhanced Intersection Observer for immediate loading
         const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+            threshold: 0.05,
+            rootMargin: '0px 0px 200px 0px'
         };
 
         const smoothObserver = new IntersectionObserver((entries) => {
@@ -882,7 +877,7 @@
                         element.style.opacity = '1';
                         element.style.transform = 'translateY(0) scale(1)';
                         element.classList.add('revealed');
-                    }, index * 50); // Faster stagger by 50ms
+                    }, index * 100); // Stagger animation by 100ms
                     
                     // Unobserve after animation
                     smoothObserver.unobserve(element);
@@ -896,31 +891,40 @@
                 if (entry.isIntersecting) {
                     const textElement = entry.target;
                     const words = textElement.textContent.split(' ');
-                    textElement.innerHTML = words.map(word => `<span style="display: inline-block; opacity: 0; transform: translateY(15px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">${word}</span>`).join(' ');
+                    textElement.innerHTML = words.map(word => `<span style="display: inline-block; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);">${word}</span>`).join(' ');
                     
-                    // Animate each word with faster stagger
+                    // Animate each word with stagger
                     const spans = textElement.querySelectorAll('span');
                     spans.forEach((span, index) => {
                         setTimeout(() => {
                             span.style.opacity = '1';
                             span.style.transform = 'translateY(0)';
-                        }, index * 40); // Much faster word animation
+                        }, index * 80); // Original timing
                     });
                     
                     textObserver.unobserve(textElement);
                 }
             });
-        }, { threshold: 0.3, rootMargin: '0px 0px -20px 0px' });
+        }, { threshold: 0.1, rootMargin: '0px 0px 150px 0px' });
+
+        // Preload animations immediately on page load
+        window.addEventListener('load', () => {
+            // Trigger immediate animations for above-the-fold content
+            const heroElements = document.querySelectorAll('.animate-fade-in, .animate-slide-in-left, .animate-slide-in-right');
+            heroElements.forEach(el => {
+                el.style.animationPlayState = 'running';
+            });
+        });
 
         // Initialize fast animations
         document.addEventListener('DOMContentLoaded', () => {
-            // Feature cards with fast animations
+            // Feature cards with enhanced animations
             const featureCards = document.querySelectorAll('.feature-card');
             featureCards.forEach((el, index) => {
                 el.style.opacity = '0';
-                el.style.transform = 'translateY(30px) scale(0.98)';
-                el.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-                el.style.transitionDelay = `${index * 80}ms`; // Faster delays
+                el.style.transform = 'translateY(50px) scale(0.95)';
+                el.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                el.style.transitionDelay = `${index * 150}ms`;
                 smoothObserver.observe(el);
             });
             
