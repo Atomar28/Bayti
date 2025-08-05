@@ -105,7 +105,8 @@ export default function CallLogs() {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
       {/* Filters and Actions */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center space-x-4 mb-4 sm:mb-0">
@@ -329,6 +330,7 @@ export default function CallLogs() {
         onClose={() => setShowAudioModal(false)}
         call={selectedCall}
       />
+      </div>
     </div>
   );
 }

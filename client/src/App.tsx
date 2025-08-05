@@ -70,8 +70,10 @@ function App() {
           <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
           <div className="flex-1 overflow-hidden">
             <Header currentPage={currentPage} />
-            <main className="flex-1 relative overflow-y-auto focus:outline-none">
-              <Router />
+            <main className="flex-1 relative overflow-y-auto focus:outline-none h-full">
+              <div className="h-full">
+                <Router />
+              </div>
             </main>
           </div>
         </div>

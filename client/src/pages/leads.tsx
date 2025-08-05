@@ -77,13 +77,15 @@ export default function Leads() {
     return "Unknown";
   };
 
-  const formatLastContact = (date: string | null) => {
+  const formatLastContact = (date: Date | string | null) => {
     if (!date) return "Never contacted";
-    return `Last contacted ${formatDistanceToNow(new Date(date), { addSuffix: true })}`;
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return `Last contacted ${formatDistanceToNow(dateObj, { addSuffix: true })}`;
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4 sm:mb-0">Lead Management</h3>
         <div className="flex items-center space-x-3">
@@ -187,6 +189,7 @@ export default function Leads() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

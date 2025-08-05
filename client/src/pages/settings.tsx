@@ -95,7 +95,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
       <div className="max-w-4xl">
         {/* Agent Settings */}
         <Card className="mb-8">
@@ -320,6 +321,7 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

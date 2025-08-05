@@ -61,9 +61,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Total Calls Today"
           value={(stats as any)?.totalCallsToday || 0}
@@ -170,6 +171,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

@@ -22,7 +22,8 @@ export default function Analytics() {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Call Volume Chart */}
         <Card>
@@ -118,6 +119,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );
