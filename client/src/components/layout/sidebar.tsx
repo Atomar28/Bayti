@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Phone, ChartLine, PhoneIcon, Users, BarChart3, Settings, User } from "lucide-react";
+import { Phone, ChartLine, PhoneIcon, Users, BarChart3, Settings, User, Home } from "lucide-react";
 
 interface SidebarProps {
   currentPage: string;
@@ -29,7 +29,7 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
         <div className="flex items-center flex-shrink-0 px-4">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
-              <Phone className="text-white w-4 h-4" />
+              <Home className="text-white w-4 h-4" />
             </div>
             <h1 className="ml-3 text-xl font-bold text-gray-900">DARI AI</h1>
           </div>
