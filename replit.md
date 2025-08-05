@@ -1,8 +1,16 @@
 # Overview
 
-Bayti is a full-stack web application for managing AI-powered calling agent operations. The system provides a comprehensive dashboard for tracking call logs, managing leads, analyzing performance metrics, and configuring agent settings. Built as a modern single-page application with real-time data management capabilities for sales and lead generation workflows.
+Bayti is a comprehensive AI-powered calling agent system built for real estate professionals. The platform integrates Twilio for phone calls, OpenAI for speech processing and intelligent responses, and ElevenLabs for natural voice synthesis. Features a premium web dashboard for managing calls, leads, analytics, and testing AI call functionality.
 
-**NEW**: Added a premium marketing landing page with Apple-inspired design, glassmorphism effects, smooth animations, and conversion-optimized layout for lead generation. Complete rebrand from "DARI AI" to "Bayti" with the "A" and "I" letters highlighted in blue within the word to spell out "AI" - emphasizing the AI agent functionality while maintaining the Arabic "home" meaning.
+**Key Features**: 
+- AI-powered calling agent with real estate expertise
+- Real-time call processing with speech-to-text and text-to-speech
+- Twilio integration for incoming/outgoing calls
+- Test call functionality from dashboard
+- Real-time call logs and conversation tracking
+- Premium Apple-inspired UI design with glassmorphism effects
+
+**Recent Integration**: Successfully deployed dual-server architecture (Node.js + Python FastAPI) for full AI calling capabilities with Twilio webhooks, OpenAI Whisper transcription, GPT-4o mini responses, and ElevenLabs voice synthesis.
 
 # User Preferences
 
@@ -23,13 +31,20 @@ The frontend follows a component-based architecture with clear separation betwee
 
 ## Backend Architecture
 
-**Server**: Express.js with TypeScript
+**Dual-Server Setup**: 
+- **Node.js/Express**: Main web server (port 5000) handling dashboard, authentication, and API routing
+- **Python FastAPI**: AI calling backend (port 8000) handling Twilio webhooks, OpenAI integration, and voice processing
+
+**Node.js Backend**:
 - **Database Layer**: Drizzle ORM with type-safe database operations
 - **API Design**: RESTful endpoints with proper error handling and validation
-- **File Structure**: Clean separation between routes, storage layer, and database configuration
-- **Middleware**: Request logging, JSON parsing, and error handling middleware
+- **AI Integration**: Proxy endpoints to Python backend for AI calling features
 
-The backend implements a repository pattern through the storage layer, abstracting database operations and providing a clean interface for data access.
+**Python FastAPI Backend**:
+- **Twilio Integration**: Webhook handling for incoming calls
+- **OpenAI Services**: Whisper for transcription, GPT-4o mini for responses
+- **ElevenLabs**: Text-to-speech voice synthesis
+- **Real-time Processing**: Asynchronous call processing pipeline
 
 ## Database Schema
 
