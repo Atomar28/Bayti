@@ -260,6 +260,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile("landing.html", { root: "client" });
   });
   
+  // Auth page route
+  app.get("/auth", (req, res) => {
+    res.sendFile("auth.html", { root: "client" });
+  });
+  
   // Also serve at root for marketing
   app.get("/home", (req, res) => {
     res.sendFile("landing.html", { root: "client" });
