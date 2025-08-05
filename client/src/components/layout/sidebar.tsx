@@ -47,7 +47,7 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
               </svg>
             </div>
             <div className="ml-3">
-              <h1 className="text-xl font-bold text-gray-900">Bayti</h1>
+              <h1 className="text-xl font-bold text-gray-900">Bayt<span className="text-blue-600 font-extrabold">AI</span></h1>
               <p className="text-xs text-gray-500 -mt-1">Smart Calling Agent</p>
             </div>
           </div>
