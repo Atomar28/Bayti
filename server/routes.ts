@@ -18,6 +18,8 @@ const conversationContexts = new Map<string, Array<{role: string, content: strin
 // Generate intelligent AI response using GPT-4o mini
 async function generateAIResponse(userInput: string, callSid: string): Promise<string> {
   try {
+    console.log(`Generating AI response for call ${callSid} with input: "${userInput}"`);
+    
     // Get or initialize conversation context
     let context = conversationContexts.get(callSid) || [];
     
@@ -25,7 +27,7 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
     if (context.length === 0) {
       context.push({
         role: "system",
-        content: "You are Bayti, a professional real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, and timeline. Keep responses concise and natural for phone conversations."
+        content: "You are Bayti, an expert real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, bedrooms, and timeline. Always respond to exactly what the user said and ask natural follow-up questions. Keep responses concise (under 100 words) and natural for phone conversations. Never repeat previous responses."
       });
     }
     
@@ -36,8 +38,10 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: context,
-      max_tokens: 150,
-      temperature: 0.7,
+      max_tokens: 120,
+      temperature: 0.8,
+      presence_penalty: 0.6, // Encourage varied responses
+      frequency_penalty: 0.3, // Reduce repetition
     });
     
     const aiResponse = completion.choices[0]?.message?.content || "I'd be happy to help you find the perfect property. Could you tell me more about what you're looking for?";
@@ -45,19 +49,27 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
     // Add AI response to context
     context.push({ role: "assistant", content: aiResponse });
     
-    // Keep only last 10 messages to manage context length
-    if (context.length > 11) {
-      context = [context[0], ...context.slice(-10)];
+    // Keep only last 8 messages to manage context length
+    if (context.length > 9) {
+      context = [context[0], ...context.slice(-8)];
     }
     
     // Update conversation context
     conversationContexts.set(callSid, context);
     
+    console.log(`AI response generated: "${aiResponse}"`);
     return aiResponse;
     
   } catch (error) {
     console.error("Error generating AI response:", error);
-    return "I'm here to help you find the perfect property. Could you tell me what type of home you're looking for?";
+    // Different fallback responses to avoid repetition
+    const fallbacks = [
+      "I'm here to help you find the perfect property. What type of home interests you?",
+      "Could you tell me more about what you're looking for in a property?",
+      "What kind of property are you interested in today?",
+      "I'd love to help with your property search. What are your requirements?"
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
   }
 }
 
@@ -405,11 +417,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Initialize conversation context for this call
       conversationContexts.set(CallSid, []);
+      console.log(`Initialized conversation context for call ${CallSid}`);
       
       // Return TwiML response for AI conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
+    <Gather input="speech" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
         <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home in Dubai and the UAE. How can I assist you today?</Say>
     </Gather>
     <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak. Goodbye!</Say>
@@ -430,9 +443,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { CallSid, SpeechResult } = req.body;
       const call_sid = req.query.call_sid as string;
       
-      console.log(`Processing speech for call ${call_sid}: ${SpeechResult}`);
+      console.log(`Processing speech for call ${call_sid}: "${SpeechResult}"`);
+      console.log(`Speech confidence: ${req.body.Confidence || 'N/A'}`);
 
-      if (!SpeechResult) {
+      // Validate speech input
+      if (!SpeechResult || SpeechResult.trim().length === 0) {
+        console.log(`No valid speech detected for call ${call_sid}`);
+        // Check if this is a repeated empty response
+        const context = conversationContexts.get(call_sid) || [];
+        const emptyCount = context.filter(msg => msg.role === 'user' && (!msg.content || msg.content.trim().length === 0)).length;
+        
+        if (emptyCount >= 2) {
+          // Too many empty responses, end call gracefully
+          const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="Polly.Joanna">I'm having trouble hearing you clearly. Please feel free to call back when you have a better connection. Thank you for calling Bayti!</Say>
+    <Hangup/>
+</Response>`;
+          res.set('Content-Type', 'application/xml');
+          return res.send(twimlResponse);
+        }
         // No speech detected, ask again
         const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -464,11 +494,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return TwiML with AI response and continue conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="Polly.Joanna">${aiResponse}</Say>
-    <Gather input="speech" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+    <Say voice="Polly.Joanna">${aiResponse.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')}</Say>
+    <Gather input="speech" timeout="8" speechTimeout="auto" partialResultCallback="/api/ai/partial-speech?call_sid=${call_sid}" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
         <Say voice="Polly.Joanna"></Say>
     </Gather>
-    <Say voice="Polly.Joanna">Thank you for calling Bayti. Feel free to call back anytime. Goodbye!</Say>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a wonderful day!</Say>
     <Hangup/>
 </Response>`;
 

@@ -1,0 +1,101 @@
+🔥 You’re almost there — call connects, it doesn’t drop — now let’s fix the AI loop so Bayti talks naturally, listens to you, and doesn’t repeat the same line.
+
+⸻
+
+🔻 Problem: AI Agent Repeats Same Line
+
+Likely Cause	Why It Happens
+❌ GPT prompt reset each time	Each response starts with same prompt, no memory of past input
+❌ Whisper input ignored/misused	Real transcription isn’t being passed to GPT properly
+❌ No conversation history stored	GPT-4o replies based on static system prompt every time
+🟠 Audio delay or failed transcription	Empty or partial input leads to fallback default reply
+
+
+⸻
+
+✅ Goal: Natural Human-like AI Agent Flow
+	1.	✅ You speak → Whisper transcribes accurately
+	2.	✅ GPT-4o mini remembers last conversation turn and responds smartly
+	3.	✅ ElevenLabs makes reply lifelike
+	4.	✅ Loop continues back and forth
+
+⸻
+
+🟢 Solution: Add a Conversation Memory + Dynamic Prompting
+
+1️⃣ Modify Backend: Track Call Context
+
+Add simple session memory in your backend per call using a call_id.
+
+Add this in main.py:
+
+# Global memory dict (replace with PostgreSQL later for scale)
+conversation_memory = {}
+
+def get_conversation_history(call_id):
+    return conversation_memory.get(call_id, [])
+
+def update_conversation_history(call_id, role, content):
+    history = conversation_memory.get(call_id, [])
+    history.append({"role": role, "content": content})
+    conversation_memory[call_id] = history
+
+
+⸻
+
+2️⃣ Send Full History to GPT-4o Mini:
+
+# Get previous messages
+history = get_conversation_history(call_id)
+
+# Add user’s new message
+history.append({"role": "user", "content": transcribed_text})
+
+# GPT reply
+response = openai.ChatCompletion.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are Bayti AI, a friendly real estate agent. Have a natural, helpful conversation and ask follow-up questions."}
+    ] + history
+)
+
+reply = response['choices'][0]['message']['content']
+
+# Save reply to memory
+update_conversation_history(call_id, "assistant", reply)
+
+
+⸻
+
+3️⃣ Whisper Input Fix:
+
+Print transcribed_text. If it’s empty or very short, GPT will default to first reply again.
+→ Fix: validate audio, retry Whisper if empty.
+
+⸻
+
+🟣 Bonus: Add Real Estate Prompt Dynamics
+
+Let GPT ask different follow-up questions like:
+	•	“What’s your budget?”
+	•	“Are you looking to rent or buy?”
+	•	“Preferred location in Dubai?”
+
+You can tweak system prompt like:
+
+"You are Bayti AI, a Dubai-based real estate expert. Engage the user in a natural conversation to understand their needs. Always respond to what they said, and ask clear follow-up questions."
+
+
+⸻
+
+✅ Result After Fix:
+	•	You: “Hi, I’m looking for a villa in Dubai Hills.”
+	•	Bayti: “Great choice! What’s your budget range for the villa?”
+
+And the conversation flows naturally.
+
+⸻
+
+Want Me to Generate Updated Backend Code for This?
+
+Let me know — I can push the memory-enabled version with smart GPT-4o prompt flow now. Ready?
