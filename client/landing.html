@@ -96,6 +96,43 @@
             scroll-behavior: smooth;
         }
         
+        /* Enhanced typography and spacing */
+        h1, h2, h3, h4, h5, h6 {
+            text-rendering: optimizeLegibility;
+            font-feature-settings: "kern" 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: -0.025em;
+            line-height: 1.2;
+            word-spacing: 0.1em;
+        }
+        
+        p, span, div {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Prevent awkward line breaks in headings */
+        .text-4xl, .text-5xl {
+            hyphens: none;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .text-4xl, .text-5xl {
+                white-space: normal;
+                word-break: break-word;
+            }
+        }
+        
+        /* Better text spacing for readability */
+        .prose-enhanced {
+            line-height: 1.7;
+            letter-spacing: 0.0125em;
+        }
+        
         .gradient-text {
             background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #ffffff 100%);
             -webkit-background-clip: text;
@@ -320,10 +357,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 animate-fade-in-up">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4 animate-slide-in-left">
-                    Powerful Features for
-                    <span class="text-blue-600 font-extrabold animate-slide-in-right">Modern Agents</span>
+                    Powerful&nbsp;Features&nbsp;for&nbsp;<span class="text-blue-600 font-extrabold animate-slide-in-right">Modern&nbsp;Agents</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in-up" style="animation-delay: 0.3s; animation-fill-mode: both;">
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in-up prose-enhanced" style="animation-delay: 0.3s; animation-fill-mode: both;">
                     Everything you need to automate your real estate operations and scale your business to new heights.
                 </p>
             </div>
@@ -417,7 +453,7 @@
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                     See DARI AI in&nbsp;<span class="text-blue-600 font-extrabold">Action</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto prose-enhanced">
                     Watch how our AI agents transform real estate lead generation and qualification.
                 </p>
             </div>
@@ -465,10 +501,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    Simple, Transparent
-                    <span class="text-blue-600 font-extrabold">Pricing</span>
+                    Simple,&nbsp;Transparent&nbsp;<span class="text-blue-600 font-extrabold">Pricing</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto prose-enhanced">
                     Choose the plan that fits your business. Scale up or down as needed.
                 </p>
             </div>
@@ -612,10 +647,9 @@
             <div class="max-w-4xl mx-auto">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        Ready to Get
-                        <span class="text-blue-600 font-extrabold">Started?</span>
+                        Ready&nbsp;to&nbsp;Get&nbsp;<span class="text-blue-600 font-extrabold">Started?</span>
                     </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto prose-enhanced">
                         Join thousands of real estate professionals who are already using DARI AI to transform their business.
                     </p>
                 </div>
