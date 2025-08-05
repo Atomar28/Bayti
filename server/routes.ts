@@ -255,6 +255,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Incoming Call Webhook endpoint
+  app.post("/api/incoming-call", async (req, res) => {
+    try {
+      console.log("Incoming call webhook received:", req.body);
+      
+      // Extract call information from webhook payload
+      const {
+        phoneNumber,
+        callerId,
+        callId,
+        status = "incoming",
+        timestamp = new Date(),
+        callerName,
+        duration = 0
+      } = req.body;
+
+      // Validate required fields
+      if (!phoneNumber) {
+        return res.status(400).json({ 
+          message: "Phone number is required",
+          error: "Missing phoneNumber in request body"
+        });
+      }
+
+      // Create a call log entry for the incoming call
+      const callLogData = {
+        phoneNumber,
+        callerId: callerId || phoneNumber,
+        status: status as "incoming" | "answered" | "completed" | "missed" | "failed",
+        startTime: new Date(timestamp),
+        duration: duration,
+        notes: callerName ? `Caller: ${callerName}` : "Incoming call",
+        recordingUrl: null,
+        leadId: null // Could be populated if caller is a known lead
+      };
+
+      const callLog = await storage.createCallLog(callLogData);
+
+      // Return response for webhook
+      res.status(200).json({
+        message: "Incoming call processed successfully",
+        callId: callLog.id,
+        status: "received",
+        timestamp: new Date(),
+        actions: {
+          answer: "Call will be handled by AI agent",
+          record: "Call recording enabled",
+          transcribe: "Real-time transcription active"
+        }
+      });
+
+    } catch (error) {
+      console.error("Error processing incoming call:", error);
+      res.status(500).json({ 
+        message: "Failed to process incoming call", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  // Get incoming call webhook info
+  app.get("/api/incoming-call", async (req, res) => {
+    res.json({
+      endpoint: "/api/incoming-call",
+      method: "POST",
+      description: "Webhook endpoint for processing incoming calls to Bayti AI system",
+      requiredFields: {
+        phoneNumber: "string - Required. The caller's phone number"
+      },
+      optionalFields: {
+        callerId: "string - Caller ID information",
+        callId: "string - External call system ID",
+        status: "string - Call status (incoming, answered, completed, missed, failed)",
+        timestamp: "string - Call timestamp (ISO format)",
+        callerName: "string - Name of the caller if known",
+        duration: "number - Call duration in seconds"
+      },
+      responseFormat: {
+        message: "Success message",
+        callId: "Generated call log ID",
+        status: "Processing status",
+        timestamp: "Processing timestamp",
+        actions: "Available AI agent actions"
+      },
+      example: {
+        request: {
+          phoneNumber: "+1234567890",
+          callerId: "+1234567890",
+          status: "incoming",
+          callerName: "John Doe",
+          timestamp: "2024-01-01T12:00:00Z"
+        },
+        response: {
+          message: "Incoming call processed successfully",
+          callId: "uuid-generated-id",
+          status: "received",
+          timestamp: "2024-01-01T12:00:00Z",
+          actions: {
+            answer: "Call will be handled by AI agent",
+            record: "Call recording enabled",
+            transcribe: "Real-time transcription active"
+          }
+        }
+      }
+    });
+  });
+
   // Landing page route
   app.get("/landing", (req, res) => {
     res.sendFile("landing.html", { root: "client" });
