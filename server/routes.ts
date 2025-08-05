@@ -259,6 +259,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/landing", (req, res) => {
     res.sendFile("landing.html", { root: "client" });
   });
+  
+  // Also serve at root for marketing
+  app.get("/home", (req, res) => {
+    res.sendFile("landing.html", { root: "client" });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

@@ -62,6 +62,23 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
               );
             })}
           </nav>
+          
+          {/* Marketing Landing Page Link */}
+          <div className="px-2 pb-4 border-t border-gray-200 pt-4">
+            <a 
+              href="/landing" 
+              target="_blank"
+              className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+            >
+              <svg className="mr-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Landing Page
+              <svg className="ml-auto w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
         </div>
         
         <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
