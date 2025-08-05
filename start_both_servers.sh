@@ -11,7 +11,13 @@ pkill -f "uvicorn" 2>/dev/null || true
 # Start Python FastAPI server in background
 cd ai_backend 
 echo "Starting Python FastAPI server on port 8000..."
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
+nohup python3 -c "
+import sys
+sys.path.append('.')
+from main import app
+import uvicorn
+uvicorn.run(app, host='0.0.0.0', port=8000)
+" > /tmp/ai_backend.log 2>&1 &
 PYTHON_PID=$!
 
 # Wait for Python server to start
