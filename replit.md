@@ -1,8 +1,8 @@
 # Overview
 
-This is a full-stack web application for managing AI-powered calling agent operations. The system provides a comprehensive dashboard for tracking call logs, managing leads, analyzing performance metrics, and configuring agent settings. Built as a modern single-page application with real-time data management capabilities for sales and lead generation workflows.
+Bayti is a full-stack web application for managing AI-powered calling agent operations. The system provides a comprehensive dashboard for tracking call logs, managing leads, analyzing performance metrics, and configuring agent settings. Built as a modern single-page application with real-time data management capabilities for sales and lead generation workflows.
 
-**NEW**: Added a premium marketing landing page with Apple-inspired design, glassmorphism effects, smooth animations, and conversion-optimized layout for lead generation.
+**NEW**: Added a premium marketing landing page with Apple-inspired design, glassmorphism effects, smooth animations, and conversion-optimized layout for lead generation. Complete rebrand from "DARI AI" to "Bayti" across all platform components.
 
 # User Preferences
 
