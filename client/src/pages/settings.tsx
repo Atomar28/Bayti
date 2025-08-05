@@ -95,13 +95,60 @@ export default function Settings() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
-      <div className="max-w-4xl">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+          <p className="mt-1 text-lg text-gray-600">Configure your AI agent and manage your account</p>
+        </div>
+
+        <div className="max-w-4xl">
+        {/* User Profile Card - NEW */}
+        <Card className="mb-8 border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-gray-900">User Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-2xl font-bold text-white">AJ</span>
+              </div>
+              <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">Full Name</Label>
+                    <Input id="fullName" value="Agent John" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+                    <Input id="email" value="hello@bayti.com" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
+                    <Input id="role" value="Lead AI Agent" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
+                    <div className="flex items-center mt-1">
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                      <span className="text-sm text-green-600 font-medium">Online & Active</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex space-x-3">
+                  <Button size="sm" variant="outline">Update Profile</Button>
+                  <Button size="sm" variant="outline">Change Password</Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Agent Settings */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Agent Configuration</CardTitle>
+        <Card className="mb-8 border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-gray-900">AI Agent Configuration</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

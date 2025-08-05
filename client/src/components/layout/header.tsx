@@ -35,16 +35,16 @@ export default function Header({ currentPage }: HeaderProps) {
               <Menu className="w-4 h-4" />
             </Button>
             
-            {/* Logo for mobile and desktop */}
+            {/* Bayti Logo from Marketing Landing Page */}
             <div className="flex items-center ml-2 md:ml-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.41l7 7V20h-2v-6h-6v6H9v-8.59l3-3z"/>
                 </svg>
               </div>
               <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-gray-900">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
-                <p className="text-xs text-gray-500 -mt-1">Smart Calling Agent</p>
+                <h1 className="text-2xl font-bold text-gray-900">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
+                <p className="text-xs text-gray-500 -mt-1 font-medium">AI Calling Platform</p>
               </div>
             </div>
             
@@ -54,7 +54,7 @@ export default function Header({ currentPage }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200">
               <Phone className="w-4 h-4 mr-2" />
               Start Call
             </Button>

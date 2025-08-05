@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import StatsCard from "@/components/ui/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, UserPlus, Clock, Percent } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Phone, UserPlus, Clock, Percent, TrendingUp, Users, Calendar, Play, Settings, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function Dashboard() {
@@ -61,23 +62,43 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
-        {/* Stats Cards */}
+        {/* Welcome Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome back, Agent John</h1>
+              <p className="mt-1 text-lg text-gray-600">Here's your call center overview for today</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
+                <Play className="w-4 h-4 mr-2" />
+                Start New Call
+              </Button>
+              <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200">
+                <Settings className="w-4 h-4 mr-2" />
+                Quick Setup
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Total Calls Today"
           value={(stats as any)?.totalCallsToday || 0}
           icon={Phone}
-          iconColor="text-green-600"
-          iconBgColor="bg-green-100"
+          iconColor="text-blue-600"
+          iconBgColor="bg-blue-100"
         />
         <StatsCard
           title="Qualified Leads"
           value={(stats as any)?.qualifiedLeads || 0}
           icon={UserPlus}
-          iconColor="text-blue-600"
-          iconBgColor="bg-blue-100"
+          iconColor="text-emerald-600"
+          iconBgColor="bg-emerald-100"
         />
         <StatsCard
           title="Avg Call Duration"
@@ -89,17 +110,81 @@ export default function Dashboard() {
         <StatsCard
           title="Success Rate"
           value={`${(stats as any)?.successRate || 0}%`}
-          icon={Percent}
+          icon={TrendingUp}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-100"
         />
-      </div>
+        </div>
+
+        {/* Quick Actions Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">AI Agent Status</h3>
+                  <p className="text-blue-100">All systems operational</p>
+                  <div className="flex items-center mt-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span className="text-sm">Online & Ready</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Phone className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Active Campaigns</h3>
+                  <p className="text-emerald-100">3 campaigns running</p>
+                  <div className="flex items-center mt-3">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Real Estate Focus</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Today's Goal</h3>
+                  <p className="text-amber-100">25 qualified leads</p>
+                  <div className="flex items-center mt-3">
+                    <div className="flex-1 bg-white/20 rounded-full h-2 mr-2">
+                      <div className="bg-white h-2 rounded-full" style={{width: '60%'}}></div>
+                    </div>
+                    <span className="text-sm">60%</span>
+                  </div>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Calls</CardTitle>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-gray-900">Recent Calls</CardTitle>
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                View all <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {callsLoading ? (
@@ -115,20 +200,20 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-4">
                 {recentCalls.map((call: any) => (
-                  <div key={call.id} className="flex items-center justify-between">
+                  <div key={call.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                     <div className="flex items-center">
-                      <div className={`w-2 h-2 rounded-full mr-3 ${
-                        call.status === 'qualified' ? 'bg-green-400' :
-                        call.status === 'no_answer' ? 'bg-red-400' : 'bg-yellow-400'
+                      <div className={`w-3 h-3 rounded-full mr-4 ${
+                        call.status === 'qualified' ? 'bg-emerald-400' :
+                        call.status === 'no_answer' ? 'bg-red-400' : 'bg-amber-400'
                       }`}></div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{call.phoneNumber}</p>
+                        <p className="text-sm font-semibold text-gray-900">{call.phoneNumber}</p>
                         <p className="text-xs text-gray-500">
                           {call.startTime ? formatDistanceToNow(new Date(call.startTime), { addSuffix: true }) : "Unknown time"}
                         </p>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(call.status)}>
+                    <Badge className={`${getStatusColor(call.status)} font-medium px-3 py-1`}>
                       {formatStatus(call.status)}
                     </Badge>
                   </div>
@@ -138,31 +223,44 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Call Scripts Performance</CardTitle>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-gray-900">AI Call Scripts</CardTitle>
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                Manage <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {scriptsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="h-12 bg-gray-200 rounded"></div>
+                    <div className="h-16 bg-gray-200 rounded-lg"></div>
                   </div>
                 ))}
               </div>
             ) : scripts.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No call scripts available</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Settings className="w-6 h-6 text-blue-600" />
+                </div>
+                <p className="text-gray-500 mb-4">No call scripts configured</p>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Create Script
+                </Button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {scripts.slice(0, 3).map((script: any) => (
-                  <div key={script.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{script.name}</p>
-                      <p className="text-xs text-gray-500">{script.description || "No description"}</p>
+                  <div key={script.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-900">{script.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">{script.description || "AI-powered real estate script"}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-green-600">--</p>
+                    <div className="text-right ml-4">
+                      <p className="text-sm font-bold text-emerald-600">85%</p>
                       <p className="text-xs text-gray-500">success rate</p>
                     </div>
                   </div>

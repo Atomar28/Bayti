@@ -101,12 +101,15 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
         
         <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <User className="text-gray-600 w-4 h-4" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <User className="text-white w-5 h-5" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">Agent John</p>
-              <p className="text-xs text-gray-500">Online</p>
+              <p className="text-sm font-semibold text-gray-900">Agent John</p>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                <p className="text-xs text-green-600 font-medium">Online</p>
+              </div>
             </div>
           </div>
         </div>
