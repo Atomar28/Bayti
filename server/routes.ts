@@ -5,6 +5,61 @@ import { insertCallLogSchema, insertLeadSchema, insertCallScriptSchema, insertAg
 import { z } from "zod";
 import fetch from "node-fetch";
 import twilio from "twilio";
+import OpenAI from "openai";
+
+// Initialize OpenAI client for AI conversation
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY 
+});
+
+// Store conversation context for each call
+const conversationContexts = new Map<string, Array<{role: string, content: string}>>();
+
+// Generate intelligent AI response using GPT-4o mini
+async function generateAIResponse(userInput: string, callSid: string): Promise<string> {
+  try {
+    // Get or initialize conversation context
+    let context = conversationContexts.get(callSid) || [];
+    
+    // Initialize with system prompt if this is the first message
+    if (context.length === 0) {
+      context.push({
+        role: "system",
+        content: "You are Bayti, a professional real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, and timeline. Keep responses concise and natural for phone conversations."
+      });
+    }
+    
+    // Add user input to context
+    context.push({ role: "user", content: userInput });
+    
+    // Generate response using GPT-4o mini
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: context,
+      max_tokens: 150,
+      temperature: 0.7,
+    });
+    
+    const aiResponse = completion.choices[0]?.message?.content || "I'd be happy to help you find the perfect property. Could you tell me more about what you're looking for?";
+    
+    // Add AI response to context
+    context.push({ role: "assistant", content: aiResponse });
+    
+    // Keep only last 10 messages to manage context length
+    if (context.length > 11) {
+      context = [context[0], ...context.slice(-10)];
+    }
+    
+    // Update conversation context
+    conversationContexts.set(callSid, context);
+    
+    return aiResponse;
+    
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+    return "I'm here to help you find the perfect property. Could you tell me what type of home you're looking for?";
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Call Logs endpoints
@@ -348,13 +403,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: `Bayti AI call from ${From}, SID: ${CallSid}`
       });
 
+      // Initialize conversation context for this call
+      conversationContexts.set(CallSid, []);
+      
       // Return TwiML response for AI conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech dtmf" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
-        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. Please tell me what you're looking for, and I'll be happy to assist you.</Say>
+    <Gather input="speech" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
+        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home in Dubai and the UAE. How can I assist you today?</Say>
     </Gather>
-    <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak.</Say>
+    <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak. Goodbye!</Say>
     <Hangup/>
 </Response>`;
 
@@ -378,10 +436,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // No speech detected, ask again
         const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech dtmf" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+    <Gather input="speech" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
         <Say voice="Polly.Joanna">I didn't catch that. Could you please tell me what type of property you're looking for?</Say>
     </Gather>
-    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a great day!</Say>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Feel free to call back anytime. Goodbye!</Say>
     <Hangup/>
 </Response>`;
 
@@ -389,19 +447,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.send(twimlResponse);
       }
 
-      // Generate contextual real estate response based on user input
-      let aiResponse = "Thank you for your interest in real estate! I'd be happy to help you find properties in your area.";
-      
-      const userInput = SpeechResult.toLowerCase();
-      if (userInput.includes('mac hills') || userInput.includes('makhills')) {
-        aiResponse = "Great choice! Mac Hills is a beautiful area with excellent amenities. I can help you find homes there. What's your budget range and how many bedrooms are you looking for?";
-      } else if (userInput.includes('home') || userInput.includes('house')) {
-        aiResponse = "I'd love to help you find the perfect home! Could you tell me your preferred neighborhood, budget range, and how many bedrooms you need?";
-      } else if (userInput.includes('apartment') || userInput.includes('flat')) {
-        aiResponse = "Perfect! I can help you find a great apartment. What area are you interested in, and what's your budget range?";
-      } else if (userInput.includes('buy') || userInput.includes('purchase')) {
-        aiResponse = "Excellent! I'll help you find properties to purchase. What type of property are you looking for and in which area?";
-      }
+      // Generate intelligent AI response using GPT-4o mini
+      const aiResponse = await generateAIResponse(SpeechResult, call_sid);
 
       // Find and update the call log
       const result = await storage.getCallLogs(1, 100);
@@ -418,10 +465,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="Polly.Joanna">${aiResponse}</Say>
-    <Gather input="speech dtmf" timeout="20" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
-        <Say voice="Polly.Joanna">Please go ahead and tell me more about what you're looking for.</Say>
+    <Gather input="speech" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+        <Say voice="Polly.Joanna"></Say>
     </Gather>
-    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a wonderful day!</Say>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Feel free to call back anytime. Goodbye!</Say>
     <Hangup/>
 </Response>`;
 
