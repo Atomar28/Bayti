@@ -34,7 +34,21 @@ export default function Header({ currentPage }: HeaderProps) {
             >
               <Menu className="w-4 h-4" />
             </Button>
-            <h2 className="ml-2 md:ml-0 text-lg font-semibold text-gray-900">
+            
+            {/* Logo for mobile and desktop */}
+            <div className="flex items-center ml-2 md:ml-0">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.41l7 7V20h-2v-6h-6v6H9v-8.59l3-3z"/>
+                </svg>
+              </div>
+              <div className="hidden md:block">
+                <h1 className="text-xl font-bold text-gray-900">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
+                <p className="text-xs text-gray-500 -mt-1">Smart Calling Agent</p>
+              </div>
+            </div>
+            
+            <h2 className="ml-4 text-lg font-semibold text-gray-900 md:hidden">
               {currentPage}
             </h2>
           </div>
