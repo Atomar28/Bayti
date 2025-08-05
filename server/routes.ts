@@ -351,8 +351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Return TwiML response for AI conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech dtmf" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
-        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. Please press any key to continue our conversation, then tell me how I can help you today.</Say>
+    <Gather input="speech dtmf" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
+        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. Please tell me what you're looking for, and I'll be happy to assist you.</Say>
     </Gather>
     <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak.</Say>
     <Hangup/>
@@ -378,9 +378,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // No speech detected, ask again
         const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech dtmf" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
-        <Say voice="Polly.Joanna">I didn't catch that. Could you please repeat your question?</Say>
+    <Gather input="speech dtmf" timeout="15" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+        <Say voice="Polly.Joanna">I didn't catch that. Could you please tell me what type of property you're looking for?</Say>
     </Gather>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a great day!</Say>
     <Hangup/>
 </Response>`;
 
@@ -388,8 +389,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.send(twimlResponse);
       }
 
-      // For now, provide a simple real estate response
-      const aiResponse = "Thank you for your interest in real estate! I'd be happy to help you find properties in your area. What type of home are you looking for and in which neighborhood?";
+      // Generate contextual real estate response based on user input
+      let aiResponse = "Thank you for your interest in real estate! I'd be happy to help you find properties in your area.";
+      
+      const userInput = SpeechResult.toLowerCase();
+      if (userInput.includes('mac hills') || userInput.includes('makhills')) {
+        aiResponse = "Great choice! Mac Hills is a beautiful area with excellent amenities. I can help you find homes there. What's your budget range and how many bedrooms are you looking for?";
+      } else if (userInput.includes('home') || userInput.includes('house')) {
+        aiResponse = "I'd love to help you find the perfect home! Could you tell me your preferred neighborhood, budget range, and how many bedrooms you need?";
+      } else if (userInput.includes('apartment') || userInput.includes('flat')) {
+        aiResponse = "Perfect! I can help you find a great apartment. What area are you interested in, and what's your budget range?";
+      } else if (userInput.includes('buy') || userInput.includes('purchase')) {
+        aiResponse = "Excellent! I'll help you find properties to purchase. What type of property are you looking for and in which area?";
+      }
 
       // Find and update the call log
       const result = await storage.getCallLogs(1, 100);
@@ -402,10 +414,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Return TwiML with AI response
+      // Return TwiML with AI response and continue conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="Polly.Joanna">${aiResponse}</Say>
+    <Gather input="speech dtmf" timeout="20" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+        <Say voice="Polly.Joanna">Please go ahead and tell me more about what you're looking for.</Say>
+    </Gather>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a wonderful day!</Say>
     <Hangup/>
 </Response>`;
 
