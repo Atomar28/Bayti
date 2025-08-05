@@ -140,7 +140,7 @@ Keep responses conversational, friendly, and under 50 words. Always end with a r
             temperature=0.7
         )
         
-        return response.choices[0].message.content.strip()
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else "I'm here to help you find your perfect home. What area are you interested in?"
     except Exception as e:
         logger.error(f"AI response error: {e}")
         return "I'm here to help you find your perfect home. What area are you interested in?"
@@ -204,12 +204,12 @@ async def handle_incoming_call(request: Request):
     # Create TwiML response for gathering speech
     response = VoiceResponse()
     
-    # Welcome message
-    welcome_msg = "Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. How can I assist you today?"
+    # Welcome message for trial accounts
+    welcome_msg = "Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home. Please press any key to continue our conversation, then tell me how I can help you today."
     
     gather = Gather(
-        input="speech",
-        timeout=5,
+        input="speech dtmf",
+        timeout=10,
         speech_timeout="auto",
         action=f"/process-speech?call_sid={call_sid}",
         method="POST"
@@ -228,7 +228,7 @@ async def process_speech(request: Request):
     """Process speech input and generate AI response"""
     form_data = await request.form()
     call_sid = form_data.get("CallSid")
-    speech_result = form_data.get("SpeechResult", "")
+    speech_result = str(form_data.get("SpeechResult", ""))
     
     logger.info(f"Processing speech for call {call_sid}: {speech_result}")
     
@@ -271,7 +271,7 @@ async def process_speech(request: Request):
     conn.commit()
     
     # Generate audio file
-    audio_path = await text_to_speech(ai_reply, call_sid)
+    audio_path = await text_to_speech(ai_reply, str(call_sid))
     if audio_path:
         cur.execute("""
             UPDATE ai_calls SET audio_file_path = %s WHERE call_sid = %s
@@ -323,13 +323,15 @@ async def make_test_call(request: Request):
     
     try:
         # Get the current replit domain for webhook URL  
-        replit_domain = os.getenv("REPLIT_DOMAINS", "").split(",")[0] if os.getenv("REPLIT_DOMAINS") else "localhost:8000"
+        replit_domain = os.getenv("REPLIT_DOMAINS", "").split(",")[0] if os.getenv("REPLIT_DOMAINS") else "localhost"
         webhook_url = f"https://{replit_domain}/incoming-call"
+        
+        logger.info(f"Making call to {to_number} with webhook URL: {webhook_url}")
         
         call = twilio_client.calls.create(
             url=webhook_url,
             to=to_number,
-            from_=TWILIO_PHONE_NUMBER
+            from_=str(TWILIO_PHONE_NUMBER)
         )
         
         return {"success": True, "call_sid": call.sid, "status": call.status}
