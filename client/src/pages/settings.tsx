@@ -15,7 +15,7 @@ import type { AgentSettings, CallScript } from "@shared/schema";
 
 export default function Settings() {
   const [agentSettings, setAgentSettings] = useState<Partial<AgentSettings>>({
-    agentName: "BaytAI Assistant",
+    agentName: "Bayti Assistant",
     voiceType: "Professional Female",
     speakingSpeed: "1.0",
     callTimeout: 30,
