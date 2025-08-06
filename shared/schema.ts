@@ -70,6 +70,41 @@ export const agentSettings = pgTable("agent_settings", {
   minBudget: integer("min_budget"),
   maxBudget: integer("max_budget"),
   region: text("region").default("North America"),
+  workingHours: jsonb("working_hours").$type<{start: string, end: string, days: string[]}>(),
+  bufferTime: integer("buffer_time").default(15), // minutes between appointments
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const appointments = pgTable("appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leadId: varchar("lead_id").references(() => leads.id),
+  agentId: varchar("agent_id").references(() => users.id),
+  callLogId: varchar("call_log_id").references(() => callLogs.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  duration: integer("duration").default(30), // minutes
+  status: text("status").default("scheduled"), // 'scheduled', 'completed', 'cancelled', 'no_show'
+  appointmentType: text("appointment_type").default("property_viewing"), // 'property_viewing', 'consultation', 'callback'
+  googleEventId: text("google_event_id"),
+  meetingLink: text("meeting_link"),
+  location: text("location"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectScripts = pgTable("project_scripts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull(),
+  projectName: text("project_name").notNull(),
+  agentId: varchar("agent_id").references(() => users.id),
+  scriptContent: text("script_content").notNull(),
+  placeholders: jsonb("placeholders").$type<{[key: string]: string}>(), // {lead_name: "John", project_name: "Palm Towers", price: "2.5M"}
+  isActive: boolean("is_active").default(true),
+  industry: text("industry").default("real_estate"),
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -98,6 +133,28 @@ export const leadsRelations = relations(leads, ({ many }) => ({
 export const agentSettingsRelations = relations(agentSettings, ({ one }) => ({
   agent: one(users, {
     fields: [agentSettings.agentId],
+    references: [users.id],
+  }),
+}));
+
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  lead: one(leads, {
+    fields: [appointments.leadId],
+    references: [leads.id],
+  }),
+  agent: one(users, {
+    fields: [appointments.agentId],
+    references: [users.id],
+  }),
+  callLog: one(callLogs, {
+    fields: [appointments.callLogId],
+    references: [callLogs.id],
+  }),
+}));
+
+export const projectScriptsRelations = relations(projectScripts, ({ one }) => ({
+  agent: one(users, {
+    fields: [projectScripts.agentId],
     references: [users.id],
   }),
 }));
@@ -131,6 +188,18 @@ export const insertAgentSettingsSchema = createInsertSchema(agentSettings).omit(
   updatedAt: true,
 });
 
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectScriptSchema = createInsertSchema(projectScripts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -146,3 +215,9 @@ export type InsertCallScript = z.infer<typeof insertCallScriptSchema>;
 
 export type AgentSettings = typeof agentSettings.$inferSelect;
 export type InsertAgentSettings = z.infer<typeof insertAgentSettingsSchema>;
+
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+
+export type ProjectScript = typeof projectScripts.$inferSelect;
+export type InsertProjectScript = z.infer<typeof insertProjectScriptSchema>;

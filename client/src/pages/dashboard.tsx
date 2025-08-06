@@ -3,10 +3,13 @@ import StatsCard from "@/components/ui/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, UserPlus, Clock, Percent, TrendingUp, Users, Calendar, Play, Settings, ChevronRight, Zap } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Phone, UserPlus, Clock, Percent, TrendingUp, Users, Calendar, Play, Settings, ChevronRight, Zap, FileText, BarChart3 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { TestCallDialog } from "@/components/ai/TestCallDialog";
 import { AICallLogs } from "@/components/ai/AICallLogs";
+import AppointmentsTab from "@/components/appointments/AppointmentsTab";
+import ProjectScriptsTab from "@/components/scripts/ProjectScriptsTab";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -88,8 +91,35 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Main Tabs Navigation */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="appointments" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Appointments
+            </TabsTrigger>
+            <TabsTrigger value="scripts" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Scripts
+            </TabsTrigger>
+            <TabsTrigger value="calls" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              Call Logs
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Enhanced Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           title="Total Calls Today"
           value={(stats as any)?.totalCallsToday || 0}
@@ -276,6 +306,36 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+          </TabsContent>
+
+          {/* Appointments Tab */}
+          <TabsContent value="appointments">
+            <AppointmentsTab />
+          </TabsContent>
+
+          {/* Project Scripts Tab */}
+          <TabsContent value="scripts">
+            <ProjectScriptsTab />
+          </TabsContent>
+
+          {/* Call Logs Tab */}
+          <TabsContent value="calls">
+            <AICallLogs />
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card className="border-0 shadow-lg">
+              <CardContent className="p-12 text-center">
+                <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings Panel</h3>
+                <p className="text-gray-600">
+                  Configure your AI agent settings, working hours, and system preferences.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

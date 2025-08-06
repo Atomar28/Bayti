@@ -1,10 +1,12 @@
 import { 
-  users, callLogs, leads, callScripts, agentSettings,
+  users, callLogs, leads, callScripts, agentSettings, appointments, projectScripts,
   type User, type InsertUser,
   type CallLog, type InsertCallLog,
   type Lead, type InsertLead,
   type CallScript, type InsertCallScript,
-  type AgentSettings, type InsertAgentSettings
+  type AgentSettings, type InsertAgentSettings,
+  type Appointment, type InsertAppointment,
+  type ProjectScript, type InsertProjectScript
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, like, or, count } from "drizzle-orm";
@@ -37,6 +39,19 @@ export interface IStorage {
   // Agent Settings
   getAgentSettings(agentId: string): Promise<AgentSettings | undefined>;
   createOrUpdateAgentSettings(settings: InsertAgentSettings): Promise<AgentSettings>;
+
+  // Appointments
+  getAppointments(agentId?: string, status?: string): Promise<Appointment[]>;
+  getAppointment(id: string): Promise<Appointment | undefined>;
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  updateAppointment(id: string, updates: Partial<InsertAppointment>): Promise<Appointment | undefined>;
+  
+  // Project Scripts
+  getProjectScripts(agentId?: string): Promise<ProjectScript[]>;
+  getProjectScript(projectId: string): Promise<ProjectScript | undefined>;
+  createProjectScript(script: InsertProjectScript): Promise<ProjectScript>;
+  updateProjectScript(id: string, updates: Partial<InsertProjectScript>): Promise<ProjectScript | undefined>;
+  deleteProjectScript(id: string): Promise<boolean>;
 
   // Analytics
   getCallStats(): Promise<{
@@ -220,6 +235,96 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return settings;
     }
+  }
+
+  async getAppointments(agentId?: string, status?: string): Promise<Appointment[]> {
+    let whereConditions = undefined;
+    
+    if (agentId || status) {
+      const conditions = [];
+      if (agentId) {
+        conditions.push(eq(appointments.agentId, agentId));
+      }
+      if (status) {
+        conditions.push(eq(appointments.status, status));
+      }
+      whereConditions = conditions.length > 1 ? and(...conditions) : conditions[0];
+    }
+
+    return await db.select()
+      .from(appointments)
+      .where(whereConditions)
+      .orderBy(desc(appointments.scheduledTime));
+  }
+
+  async getAppointment(id: string): Promise<Appointment | undefined> {
+    const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
+    return appointment || undefined;
+  }
+
+  async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
+    const [appointment] = await db
+      .insert(appointments)
+      .values(insertAppointment)
+      .returning();
+    return appointment;
+  }
+
+  async updateAppointment(id: string, updates: Partial<InsertAppointment>): Promise<Appointment | undefined> {
+    const [appointment] = await db
+      .update(appointments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(appointments.id, id))
+      .returning();
+    return appointment || undefined;
+  }
+
+  async getProjectScripts(agentId?: string): Promise<ProjectScript[]> {
+    let whereConditions = eq(projectScripts.isActive, true);
+    
+    if (agentId) {
+      whereConditions = and(whereConditions, eq(projectScripts.agentId, agentId));
+    }
+
+    return await db.select()
+      .from(projectScripts)
+      .where(whereConditions)
+      .orderBy(desc(projectScripts.updatedAt));
+  }
+
+  async getProjectScript(projectId: string): Promise<ProjectScript | undefined> {
+    const [script] = await db.select()
+      .from(projectScripts)
+      .where(and(
+        eq(projectScripts.projectId, projectId),
+        eq(projectScripts.isActive, true)
+      ));
+    return script || undefined;
+  }
+
+  async createProjectScript(insertScript: InsertProjectScript): Promise<ProjectScript> {
+    const [script] = await db
+      .insert(projectScripts)
+      .values(insertScript)
+      .returning();
+    return script;
+  }
+
+  async updateProjectScript(id: string, updates: Partial<InsertProjectScript>): Promise<ProjectScript | undefined> {
+    const [script] = await db
+      .update(projectScripts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(projectScripts.id, id))
+      .returning();
+    return script || undefined;
+  }
+
+  async deleteProjectScript(id: string): Promise<boolean> {
+    const result = await db
+      .update(projectScripts)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(projectScripts.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   async getCallStats(): Promise<{

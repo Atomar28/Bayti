@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCallLogSchema, insertLeadSchema, insertCallScriptSchema, insertAgentSettingsSchema } from "@shared/schema";
+import { insertCallLogSchema, insertLeadSchema, insertCallScriptSchema, insertAgentSettingsSchema, insertAppointmentSchema, insertProjectScriptSchema } from "@shared/schema";
 import { z } from "zod";
 import fetch from "node-fetch";
 import twilio from "twilio";
@@ -20,6 +20,139 @@ const openai = new OpenAI({
 
 // Store conversation context for each call
 const conversationContexts = new Map<string, Array<{role: string, content: string}>>();
+
+// Generate alternative appointment times using GPT-4o mini
+async function generateAlternativeAppointmentTimes(proposedTime: Date): Promise<string[]> {
+  try {
+    const prompt = `The proposed appointment time ${proposedTime.toISOString()} is not available. Generate 2 alternative appointment times within the next 3 days during business hours (9 AM - 6 PM). Return only the times as an array of ISO date strings.`;
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }] as any,
+      max_tokens: 100,
+      temperature: 0.3,
+    });
+    
+    const response = completion.choices[0]?.message?.content || "";
+    
+    // Parse the response and generate actual alternative times
+    const now = new Date();
+    const alternatives = [];
+    
+    // Add 1 day and same time
+    const alt1 = new Date(proposedTime);
+    alt1.setDate(alt1.getDate() + 1);
+    alternatives.push(alt1.toISOString());
+    
+    // Add 2 days and same time  
+    const alt2 = new Date(proposedTime);
+    alt2.setDate(alt2.getDate() + 2);
+    alternatives.push(alt2.toISOString());
+    
+    return alternatives;
+  } catch (error) {
+    console.error("Error generating alternative times:", error);
+    // Fallback alternatives
+    const alt1 = new Date(proposedTime);
+    alt1.setDate(alt1.getDate() + 1);
+    const alt2 = new Date(proposedTime);
+    alt2.setDate(alt2.getDate() + 2);
+    return [alt1.toISOString(), alt2.toISOString()];
+  }
+}
+
+// Process script placeholders with lead/project data
+function processScriptPlaceholders(scriptContent: string, placeholders: {[key: string]: string}): string {
+  let processedScript = scriptContent;
+  
+  // Replace placeholders like {lead_name}, {project_name}, {price}
+  Object.entries(placeholders).forEach(([key, value]) => {
+    const placeholder = `{${key}}`;
+    processedScript = processedScript.replace(new RegExp(placeholder, 'g'), value);
+  });
+  
+  return processedScript;
+}
+
+// Enhanced AI response with script integration
+async function generateAIResponseWithScript(userInput: string, callSid: string, projectId?: string, leadData?: any): Promise<string> {
+  try {
+    console.log(`Generating AI response for call ${callSid} with input: "${userInput}"`);
+    
+    // Get or initialize conversation context
+    let context = conversationContexts.get(callSid) || [];
+    
+    // Check if there's a custom script for this project
+    let systemPrompt = "You are Bayti, an expert real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, bedrooms, and timeline. Always respond to exactly what the user said and ask natural follow-up questions. Keep responses concise (under 100 words) and natural for phone conversations. Never repeat previous responses.";
+    
+    if (projectId) {
+      try {
+        const projectScript = await storage.getProjectScript(projectId);
+        if (projectScript) {
+          // Process placeholders with actual lead data
+          const placeholders = {
+            lead_name: leadData?.name || "valued client",
+            project_name: projectScript.projectName,
+            price: projectScript.placeholders?.price || "competitive pricing",
+            ...projectScript.placeholders
+          };
+          
+          const processedScript = processScriptPlaceholders(projectScript.scriptContent, placeholders);
+          systemPrompt = `You are Bayti, a real estate AI assistant. Use this custom script as guidance for the conversation: ${processedScript}. Adapt the script naturally to the conversation flow while maintaining the key points and information.`;
+          console.log(`Using custom script for project ${projectId}`);
+        }
+      } catch (error) {
+        console.log(`No custom script found for project ${projectId}, using default AI flow`);
+      }
+    }
+    
+    // Initialize with system prompt if this is the first message
+    if (context.length === 0) {
+      context.push({
+        role: "system",
+        content: systemPrompt
+      });
+    }
+    
+    // Add user input to context
+    context.push({ role: "user", content: userInput });
+    
+    // Generate response using GPT-4o mini
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: context as any,
+      max_tokens: 120,
+      temperature: 0.8,
+      presence_penalty: 0.6,
+      frequency_penalty: 0.3,
+    });
+    
+    const aiResponse = completion.choices[0]?.message?.content || "I'd be happy to help you find the perfect property. Could you tell me more about what you're looking for?";
+    
+    // Add AI response to context
+    context.push({ role: "assistant", content: aiResponse });
+    
+    // Keep only last 8 messages to manage context length
+    if (context.length > 9) {
+      context = [context[0], ...context.slice(-8)];
+    }
+    
+    // Update conversation context
+    conversationContexts.set(callSid, context);
+    
+    console.log(`AI response generated: "${aiResponse}"`);
+    return aiResponse;
+    
+  } catch (error) {
+    console.error("Error generating AI response:", error);
+    const fallbacks = [
+      "I'm here to help you find the perfect property. What type of home interests you?",
+      "Could you tell me more about what you're looking for in a property?",
+      "What kind of property are you interested in today?",
+    ];
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+}
 
 // Generate intelligent AI response using GPT-4o mini
 async function generateAIResponse(userInput: string, callSid: string): Promise<string> {
@@ -43,7 +176,7 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
     // Generate response using GPT-4o mini
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: context,
+      messages: context as any,
       max_tokens: 120,
       temperature: 0.8,
       presence_penalty: 0.6, // Encourage varied responses
@@ -630,6 +763,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     });
+  });
+
+  // ==================== NEW API ROUTES ====================
+  
+  // APPOINTMENTS API
+  app.get("/api/v1/appointments", async (req, res) => {
+    try {
+      const { agentId, status } = req.query;
+      const appointments = await storage.getAppointments(
+        agentId as string, 
+        status as string
+      );
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.post("/api/v1/appointment/book", async (req, res) => {
+    try {
+      const validatedData = insertAppointmentSchema.parse(req.body);
+      
+      // Check for conflicts (basic implementation)
+      const existingAppointments = await storage.getAppointments(validatedData.agentId);
+      const proposedTime = new Date(validatedData.scheduledTime!);
+      const conflictingAppointment = existingAppointments.find(apt => {
+        const existingTime = new Date(apt.scheduledTime);
+        const timeDiff = Math.abs(existingTime.getTime() - proposedTime.getTime());
+        return timeDiff < (apt.duration || 30) * 60 * 1000; // Check buffer time
+      });
+
+      if (conflictingAppointment) {
+        // Generate alternative times using AI
+        const alternativeTimes = await generateAlternativeAppointmentTimes(proposedTime);
+        return res.status(409).json({
+          message: "Time slot not available",
+          conflictingAppointment: conflictingAppointment,
+          alternatives: alternativeTimes
+        });
+      }
+
+      const appointment = await storage.createAppointment(validatedData);
+      res.status(201).json(appointment);
+    } catch (error) {
+      console.error("Error booking appointment:", error);
+      res.status(500).json({ message: "Failed to book appointment" });
+    }
+  });
+
+  app.put("/api/v1/appointments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const appointment = await storage.updateAppointment(id, updates);
+      
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+      
+      res.json(appointment);
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      res.status(500).json({ message: "Failed to update appointment" });
+    }
+  });
+
+  // PROJECT SCRIPTS API
+  app.get("/api/v1/script/:projectId", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const script = await storage.getProjectScript(projectId);
+      
+      if (!script) {
+        return res.status(404).json({ message: "No script found for this project" });
+      }
+      
+      res.json(script);
+    } catch (error) {
+      console.error("Error fetching project script:", error);
+      res.status(500).json({ message: "Failed to fetch project script" });
+    }
+  });
+
+  app.post("/api/v1/script", async (req, res) => {
+    try {
+      const validatedData = insertProjectScriptSchema.parse(req.body);
+      const script = await storage.createProjectScript(validatedData);
+      res.status(201).json(script);
+    } catch (error) {
+      console.error("Error creating project script:", error);
+      res.status(500).json({ message: "Failed to create project script" });
+    }
+  });
+
+  app.get("/api/v1/scripts", async (req, res) => {
+    try {
+      const { agentId } = req.query;
+      const scripts = await storage.getProjectScripts(agentId as string);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching project scripts:", error);
+      res.status(500).json({ message: "Failed to fetch project scripts" });
+    }
+  });
+
+  app.put("/api/v1/scripts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const script = await storage.updateProjectScript(id, updates);
+      
+      if (!script) {
+        return res.status(404).json({ message: "Project script not found" });
+      }
+      
+      res.json(script);
+    } catch (error) {
+      console.error("Error updating project script:", error);
+      res.status(500).json({ message: "Failed to update project script" });
+    }
+  });
+
+  app.delete("/api/v1/scripts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteProjectScript(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Project script not found" });
+      }
+      
+      res.json({ message: "Project script deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting project script:", error);
+      res.status(500).json({ message: "Failed to delete project script" });
+    }
   });
 
   // Landing page route

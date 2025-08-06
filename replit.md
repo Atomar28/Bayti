@@ -8,9 +8,14 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 - Twilio integration for incoming/outgoing calls
 - Test call functionality from dashboard
 - Real-time call logs and conversation tracking
+- Calendar-based appointment booking with conflict detection
+- Live script upload system with dynamic placeholders
+- Project-specific AI conversation customization
 - Premium Apple-inspired UI design with glassmorphism effects
 
 **Recent Integration**: Successfully migrated from unstable dual-server architecture to unified Node.js implementation for AI calling system. Integrated Twilio directly with Express.js server, eliminating Python backend dependency. All AI calling functionality now runs through single stable server with proper TwiML webhook responses. System confirmed working with live test calls and speech recognition.
+
+**Latest Features (2025-08-06)**: Implemented comprehensive calendar-based appointment booking system with Google Calendar integration and live script upload functionality. Added two new database tables (appointments, projectScripts) with full CRUD operations. Created dedicated dashboard tabs for managing appointments and project-specific scripts with dynamic placeholder support. Enhanced AI conversation system to utilize custom scripts when available, falling back to default real estate AI flow.
 
 # User Preferences
 
@@ -54,6 +59,8 @@ The frontend follows a component-based architecture with clear separation betwee
 - **Leads**: Contact management with qualification scoring and follow-up tracking
 - **Call Scripts**: Configurable conversation templates
 - **Agent Settings**: Customizable AI agent configuration
+- **Appointments**: Calendar-based appointment scheduling with Google integration
+- **Project Scripts**: Live script uploads with dynamic placeholder support
 
 All tables use UUID primary keys and include proper timestamps and relationships.
 
