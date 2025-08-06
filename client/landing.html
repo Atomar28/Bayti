@@ -312,19 +312,23 @@
                 muted
                 loop
                 playsinline
-                class="absolute inset-0 w-full h-full object-cover"
-                poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzRjMWQ5NSIvPgo8c3RvcCBvZmZzZXQ9IjUwJSIgc3R5bGU9InN0b3AtY29sb3I6IzU4MWM4NyIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMzNzMwYTMiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4="
+                preload="metadata"
+                class="absolute inset-0 w-full h-full object-cover z-0"
+                style="z-index: 1;"
+                onloadstart="console.log('Video load started')"
+                oncanplay="console.log('Video can play')"
+                onerror="console.error('Video error:', this.error)"
             >
-                <source src="@assets/watermarked_preview-3_1754468961286.mp4" type="video/mp4">
+                <source src="/attached_assets/watermarked_preview-3_1754468961286.mp4" type="video/mp4">
                 <!-- Fallback for browsers that don't support video -->
                 Your browser does not support the video tag.
             </video>
             
             <!-- Dark overlay for text readability -->
-            <div class="absolute inset-0 bg-black/40"></div>
+            <div class="absolute inset-0 bg-black/40" style="z-index: 2;"></div>
         </div>
         
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative" style="z-index: 10;">
             <div class="animate-fade-in">
                 <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                     The&nbsp;Future&nbsp;of<br><span class="text-white font-extrabold" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">Real&nbsp;Estate&nbsp;AI</span>

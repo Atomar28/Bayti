@@ -6,6 +6,12 @@ import { z } from "zod";
 import fetch from "node-fetch";
 import twilio from "twilio";
 import OpenAI from "openai";
+import express from "express";
+import path from "path";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize OpenAI client for AI conversation
 const openai = new OpenAI({ 
@@ -74,6 +80,8 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files from attached_assets
+  app.use('/attached_assets', express.static(path.join(__dirname, '..', 'attached_assets')));
   // Call Logs endpoints
   app.get("/api/call-logs", async (req, res) => {
     try {
