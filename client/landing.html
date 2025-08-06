@@ -141,12 +141,11 @@
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        .hero-gradient {
-            background: linear-gradient(135deg, #4c1d95 0%, #581c87 50%, #3730a3 100%);
+        .hero-video {
             position: relative;
         }
         
-        .hero-gradient::after {
+        .hero-video::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -155,6 +154,7 @@
             height: 100px;
             background: linear-gradient(to bottom, transparent 0%, rgba(249, 250, 251, 0.8) 70%, rgba(249, 250, 251, 1) 100%);
             pointer-events: none;
+            z-index: 10;
         }
         
         .card-hover {
@@ -304,12 +304,24 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="h-screen hero-gradient flex items-center justify-center relative overflow-hidden">
-        <!-- Animated background elements -->
-        <div class="absolute inset-0">
-            <div class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
-            <div class="absolute top-40 right-10 w-72 h-72 bg-blue-300/20 rounded-full mix-blend-multiply filter blur-xl animate-float" style="animation-delay: 2s;"></div>
-            <div class="absolute -bottom-8 left-20 w-72 h-72 bg-purple-300/20 rounded-full mix-blend-multiply filter blur-xl animate-float" style="animation-delay: 4s;"></div>
+    <section class="h-screen flex items-center justify-center relative overflow-hidden">
+        <!-- Video Background -->
+        <div class="absolute inset-0 w-full h-full">
+            <video
+                autoplay
+                muted
+                loop
+                playsinline
+                class="absolute inset-0 w-full h-full object-cover"
+                poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KPHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzRjMWQ5NSIvPgo8c3RvcCBvZmZzZXQ9IjUwJSIgc3R5bGU9InN0b3AtY29sb3I6IzU4MWM4NyIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMzNzMwYTMiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4="
+            >
+                <source src="@assets/watermarked_preview-3_1754468961286.mp4" type="video/mp4">
+                <!-- Fallback for browsers that don't support video -->
+                Your browser does not support the video tag.
+            </video>
+            
+            <!-- Dark overlay for text readability -->
+            <div class="absolute inset-0 bg-black/40"></div>
         </div>
         
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
