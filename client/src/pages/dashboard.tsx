@@ -10,6 +10,7 @@ import { TestCallDialog } from "@/components/ai/TestCallDialog";
 import { AICallLogs } from "@/components/ai/AICallLogs";
 import AppointmentsTab from "@/components/appointments/AppointmentsTab";
 import ProjectScriptsTab from "@/components/scripts/ProjectScriptsTab";
+import SettingsTab from "@/components/settings/SettingsTab";
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -325,15 +326,7 @@ export default function Dashboard() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card className="border-0 shadow-lg">
-              <CardContent className="p-12 text-center">
-                <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings Panel</h3>
-                <p className="text-gray-600">
-                  Configure your AI agent settings, working hours, and system preferences.
-                </p>
-              </CardContent>
-            </Card>
+            <SettingsTab />
           </TabsContent>
         </Tabs>
       </div>

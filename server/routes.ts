@@ -9,6 +9,7 @@ import OpenAI from "openai";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from 'url';
+import { elevenLabsService } from "./elevenlabs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -399,6 +400,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to save agent settings", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // ElevenLabs Voice API Routes
+  app.get("/api/elevenlabs/voices", async (req, res) => {
+    try {
+      const voices = await elevenLabsService.getVoices();
+      res.json(voices);
+    } catch (error) {
+      console.error("Error fetching voices:", error);
+      res.status(500).json({ message: "Failed to fetch voices" });
+    }
+  });
+
+  app.get("/api/elevenlabs/models", async (req, res) => {
+    try {
+      const models = await elevenLabsService.getModels();
+      res.json(models);
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      res.status(500).json({ message: "Failed to fetch models" });
+    }
+  });
+
+  app.post("/api/elevenlabs/test-voice", async (req, res) => {
+    try {
+      const { voiceId, text } = req.body;
+      if (!voiceId) {
+        return res.status(400).json({ message: "Voice ID required" });
+      }
+      
+      const audioBase64 = await elevenLabsService.testVoice(voiceId, text);
+      res.json({ audioUrl: audioBase64 });
+    } catch (error) {
+      console.error("Error testing voice:", error);
+      res.status(500).json({ message: "Failed to test voice" });
     }
   });
 
