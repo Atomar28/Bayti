@@ -886,12 +886,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/v1/script", async (req, res) => {
     try {
-      const validatedData = insertProjectScriptSchema.parse(req.body);
+      // Add default agentId if not provided
+      const scriptData = {
+        ...req.body,
+        agentId: req.body.agentId || "mock-agent-id" // Default agent ID for now
+      };
+      
+      const validatedData = insertProjectScriptSchema.parse(scriptData);
       const script = await storage.createProjectScript(validatedData);
       res.status(201).json(script);
     } catch (error) {
       console.error("Error creating project script:", error);
-      res.status(500).json({ message: "Failed to create project script" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors,
+          details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+        });
+      }
+      res.status(500).json({ message: "Failed to create project script", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
