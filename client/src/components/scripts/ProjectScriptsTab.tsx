@@ -311,7 +311,8 @@ export default function ProjectScriptsTab() {
 
   const createMutation = useMutation({
     mutationFn: async (data: ScriptFormData) => {
-      return apiRequest("/api/v1/script", "POST", data);
+      const response = await apiRequest("POST", "/api/v1/script", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scripts"] });
@@ -322,10 +323,10 @@ export default function ProjectScriptsTab() {
     },
     onError: (error: any) => {
       console.error("Script creation error:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
+      const errorMessage = error?.message || error?.toString() || "Failed to create project script";
       toast({
         title: "Error",
-        description: error.message || error.toString() || "Failed to create project script",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -333,7 +334,8 @@ export default function ProjectScriptsTab() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ScriptFormData> }) => {
-      return apiRequest(`/api/v1/scripts/${id}`, "PUT", data);
+      const response = await apiRequest("PUT", `/api/v1/scripts/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scripts"] });
@@ -343,9 +345,11 @@ export default function ProjectScriptsTab() {
       });
     },
     onError: (error: any) => {
+      console.error("Script update error:", error);
+      const errorMessage = error?.message || error?.toString() || "Failed to update project script";
       toast({
         title: "Error",
-        description: error.message || "Failed to update project script",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -353,7 +357,8 @@ export default function ProjectScriptsTab() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/v1/scripts/${id}`, "DELETE");
+      const response = await apiRequest("DELETE", `/api/v1/scripts/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scripts"] });
@@ -363,9 +368,11 @@ export default function ProjectScriptsTab() {
       });
     },
     onError: (error: any) => {
+      console.error("Script deletion error:", error);
+      const errorMessage = error?.message || error?.toString() || "Failed to delete project script";
       toast({
         title: "Error",
-        description: error.message || "Failed to delete project script",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -373,7 +380,8 @@ export default function ProjectScriptsTab() {
 
   const activateMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/v1/scripts/${id}/activate`, "POST");
+      const response = await apiRequest("POST", `/api/v1/scripts/${id}/activate`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scripts"] });
@@ -383,9 +391,11 @@ export default function ProjectScriptsTab() {
       });
     },
     onError: (error: any) => {
+      console.error("Script activation error:", error);
+      const errorMessage = error?.message || error?.toString() || "Failed to activate script";
       toast({
         title: "Error",
-        description: error.message || "Failed to activate script",
+        description: errorMessage,
         variant: "destructive",
       });
     },
