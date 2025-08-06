@@ -165,9 +165,32 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
     
     // Initialize with system prompt if this is the first message
     if (context.length === 0) {
+      let systemPrompt = "You are Bayti, an expert real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, bedrooms, and timeline. Always respond to exactly what the user said and ask natural follow-up questions. Keep responses concise (under 100 words) and natural for phone conversations. Never repeat previous responses.";
+      
+      try {
+        // Try to get the most recent active script for system prompt
+        const scripts = await storage.getProjectScripts();
+        if (scripts.length > 0) {
+          const latestScript = scripts[0]; // Most recently updated script
+          
+          // Process placeholders for the script
+          const placeholders = {
+            lead_name: "valued client",
+            project_name: latestScript.projectName,
+            ...latestScript.placeholders
+          };
+          
+          const processedScript = processScriptPlaceholders(latestScript.scriptContent, placeholders);
+          systemPrompt = `You are a sales agent for ${latestScript.projectName}. Use this script as guidance for the conversation: ${processedScript}. Adapt the script naturally to the conversation flow while maintaining the key points and information. Be conversational and respond naturally to what the caller says. Keep responses concise (under 100 words) and natural for phone conversations.`;
+          console.log(`Using custom script system prompt for: ${latestScript.projectName}`);
+        }
+      } catch (error) {
+        console.log('No custom scripts found, using default system prompt');
+      }
+      
       context.push({
         role: "system",
-        content: "You are Bayti, an expert real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, bedrooms, and timeline. Always respond to exactly what the user said and ask natural follow-up questions. Keep responses concise (under 100 words) and natural for phone conversations. Never repeat previous responses."
+        content: systemPrompt
       });
     }
     
@@ -597,11 +620,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       conversationContexts.set(CallSid, []);
       console.log(`Initialized conversation context for call ${CallSid}`);
       
+      // Get custom script for initial greeting if available
+      let greeting = "Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home in Dubai and the UAE. How can I assist you today?";
+      
+      try {
+        // Try to get the most recent active script
+        const scripts = await storage.getProjectScripts();
+        if (scripts.length > 0) {
+          const latestScript = scripts[0]; // Most recently updated script
+          
+          // Extract opening/greeting from script content if available
+          const scriptLines = latestScript.scriptContent.split('\n');
+          const greetingLine = scriptLines.find(line => 
+            line.toLowerCase().includes('hello') || 
+            line.toLowerCase().includes('hi') || 
+            line.toLowerCase().includes('welcome') ||
+            line.length > 50 // Assume first substantial line is greeting
+          );
+          
+          if (greetingLine) {
+            // Process placeholders in greeting
+            const placeholders = {
+              lead_name: "valued client",
+              project_name: latestScript.projectName,
+              ...latestScript.placeholders
+            };
+            greeting = processScriptPlaceholders(greetingLine, placeholders);
+            console.log(`Using custom greeting from script: ${latestScript.projectName}`);
+          } else {
+            // Use the full script content as system context but keep default greeting
+            greeting = `Hello! This is ${latestScript.projectName} calling. ${latestScript.scriptContent.substring(0, 200)}`;
+          }
+        }
+      } catch (error) {
+        console.log('No custom scripts found, using default greeting');
+      }
+      
       // Return TwiML response for AI conversation
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather input="speech" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
-        <Say voice="Polly.Joanna">Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home in Dubai and the UAE. How can I assist you today?</Say>
+        <Say voice="Polly.Joanna">${greeting.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')}</Say>
     </Gather>
     <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak. Goodbye!</Say>
     <Hangup/>
