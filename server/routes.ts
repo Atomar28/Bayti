@@ -897,7 +897,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(script);
     } catch (error) {
       console.error("Error creating project script:", error);
+      console.error("Request body:", req.body);
+      console.error("Script data:", scriptData);
       if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ 
           message: "Validation error", 
           errors: error.errors,

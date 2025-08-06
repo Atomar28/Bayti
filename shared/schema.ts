@@ -103,9 +103,9 @@ export const projectScripts = pgTable("project_scripts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: varchar("project_id").notNull(),
   projectName: text("project_name").notNull(),
-  agentId: varchar("agent_id").references(() => users.id),
+  agentId: varchar("agent_id"),
   scriptContent: text("script_content").notNull(),
-  placeholders: jsonb("placeholders").$type<{[key: string]: string}>(), // {lead_name: "John", project_name: "Palm Towers", price: "2.5M"}
+  placeholders: jsonb("placeholders").$type<{[key: string]: string}>(),
   isActive: boolean("is_active").default(true),
   industry: text("industry").default("real_estate"),
   description: text("description"),

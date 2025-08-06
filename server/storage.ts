@@ -280,15 +280,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProjectScripts(agentId?: string): Promise<ProjectScript[]> {
-    let whereConditions = eq(projectScripts.isActive, true);
-    
     if (agentId) {
-      whereConditions = and(whereConditions, eq(projectScripts.agentId, agentId));
+      return await db.select()
+        .from(projectScripts)
+        .where(and(
+          eq(projectScripts.isActive, true),
+          eq(projectScripts.agentId, agentId)
+        ))
+        .orderBy(desc(projectScripts.updatedAt));
     }
-
+    
     return await db.select()
       .from(projectScripts)
-      .where(whereConditions)
+      .where(eq(projectScripts.isActive, true))
       .orderBy(desc(projectScripts.updatedAt));
   }
 

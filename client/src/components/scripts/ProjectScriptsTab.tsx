@@ -310,9 +310,10 @@ export default function ProjectScriptsTab() {
     },
     onError: (error: any) => {
       console.error("Script creation error:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       toast({
         title: "Error",
-        description: error.message || "Failed to create project script",
+        description: error.message || error.toString() || "Failed to create project script",
         variant: "destructive",
       });
     },
