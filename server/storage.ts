@@ -48,10 +48,12 @@ export interface IStorage {
   
   // Project Scripts
   getProjectScripts(agentId?: string): Promise<ProjectScript[]>;
-  getProjectScript(projectId: string): Promise<ProjectScript | undefined>;
+  getProjectScript(id: string): Promise<ProjectScript | undefined>;
+  getActiveProjectScript(): Promise<ProjectScript | undefined>;
   createProjectScript(script: InsertProjectScript): Promise<ProjectScript>;
   updateProjectScript(id: string, updates: Partial<InsertProjectScript>): Promise<ProjectScript | undefined>;
   deleteProjectScript(id: string): Promise<boolean>;
+  setActiveProjectScript(scriptId: string): Promise<ProjectScript | undefined>;
 
   // Analytics
   getCallStats(): Promise<{
@@ -283,26 +285,41 @@ export class DatabaseStorage implements IStorage {
     if (agentId) {
       return await db.select()
         .from(projectScripts)
-        .where(and(
-          eq(projectScripts.isActive, true),
-          eq(projectScripts.agentId, agentId)
-        ))
+        .where(eq(projectScripts.agentId, agentId))
         .orderBy(desc(projectScripts.updatedAt));
     }
     
     return await db.select()
       .from(projectScripts)
-      .where(eq(projectScripts.isActive, true))
       .orderBy(desc(projectScripts.updatedAt));
   }
 
-  async getProjectScript(projectId: string): Promise<ProjectScript | undefined> {
+  async getActiveProjectScript(): Promise<ProjectScript | undefined> {
     const [script] = await db.select()
       .from(projectScripts)
-      .where(and(
-        eq(projectScripts.projectId, projectId),
-        eq(projectScripts.isActive, true)
-      ));
+      .where(eq(projectScripts.isActive, true))
+      .limit(1);
+    return script || undefined;
+  }
+
+  async setActiveProjectScript(scriptId: string): Promise<ProjectScript | undefined> {
+    // First, deactivate all scripts
+    await db.update(projectScripts)
+      .set({ isActive: false, updatedAt: new Date() });
+    
+    // Then activate the specified script
+    const [script] = await db.update(projectScripts)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(projectScripts.id, scriptId))
+      .returning();
+    
+    return script || undefined;
+  }
+
+  async getProjectScript(id: string): Promise<ProjectScript | undefined> {
+    const [script] = await db.select()
+      .from(projectScripts)
+      .where(eq(projectScripts.id, id));
     return script || undefined;
   }
 
@@ -325,8 +342,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProjectScript(id: string): Promise<boolean> {
     const result = await db
-      .update(projectScripts)
-      .set({ isActive: false, updatedAt: new Date() })
+      .delete(projectScripts)
       .where(eq(projectScripts.id, id));
     return (result.rowCount || 0) > 0;
   }

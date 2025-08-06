@@ -106,7 +106,7 @@ export const projectScripts = pgTable("project_scripts", {
   agentId: varchar("agent_id"),
   scriptContent: text("script_content").notNull(),
   placeholders: jsonb("placeholders").$type<{[key: string]: string}>(),
-  isActive: boolean("is_active").default(true),
+  isActive: boolean("is_active").default(false), // Default to inactive
   industry: text("industry").default("real_estate"),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),

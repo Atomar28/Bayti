@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Edit, Trash, Play, Eye } from "lucide-react";
+import { FileText, Plus, Edit, Trash, Play, Eye, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { ProjectScript } from "@shared/schema";
@@ -27,9 +27,10 @@ interface ScriptCardProps {
   onEdit: (script: ProjectScript) => void;
   onDelete: (id: string) => void;
   onPreview: (script: ProjectScript) => void;
+  onActivate: (id: string) => void;
 }
 
-function ScriptCard({ script, onEdit, onDelete, onPreview }: ScriptCardProps) {
+function ScriptCard({ script, onEdit, onDelete, onPreview, onActivate }: ScriptCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -70,7 +71,18 @@ function ScriptCard({ script, onEdit, onDelete, onPreview }: ScriptCardProps) {
             </div>
           </div>
           
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-2 flex-wrap">
+            {!script.isActive && (
+              <Button 
+                size="sm" 
+                variant="default"
+                onClick={() => onActivate(script.id)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Activate
+              </Button>
+            )}
             <Button size="sm" variant="outline" onClick={() => onPreview(script)}>
               <Eye className="w-4 h-4 mr-1" />
               Preview
@@ -359,6 +371,26 @@ export default function ProjectScriptsTab() {
     },
   });
 
+  const activateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/v1/scripts/${id}/activate`, "POST");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scripts"] });
+      toast({
+        title: "Success",
+        description: "Script activated successfully! This script will now be used for AI calls.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to activate script",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreate = (data: ScriptFormData) => {
     // Add agentId to the data before creating
     const scriptData = {
@@ -384,6 +416,10 @@ export default function ProjectScriptsTab() {
     if (confirm("Are you sure you want to delete this script?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleActivate = (id: string) => {
+    activateMutation.mutate(id);
   };
 
   const handlePreview = (script: ProjectScript) => {
@@ -428,6 +464,7 @@ export default function ProjectScriptsTab() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPreview={handlePreview}
+              onActivate={handleActivate}
             />
           ))}
         </div>

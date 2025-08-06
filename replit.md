@@ -17,7 +17,7 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **Latest Features (2025-08-06)**: Implemented comprehensive calendar-based appointment booking system with Google Calendar integration and live script upload functionality. Added two new database tables (appointments, projectScripts) with full CRUD operations. Created dedicated dashboard tabs for managing appointments and project-specific scripts with dynamic placeholder support. Enhanced AI conversation system to utilize custom scripts when available, falling back to default real estate AI flow.
 
-**Custom Script Integration (2025-08-06)**: Successfully integrated custom project scripts into the AI calling system. The system now dynamically uses agent-created scripts instead of hardcoded greetings for mass AI cold calling and sales. When agents create project scripts, the AI caller automatically adapts both the initial greeting and conversation flow to match the custom script content, supporting real-world sales scenarios with dynamic placeholder replacement for personalized conversations.
+**Active Script System (2025-08-06)**: Implemented comprehensive active/inactive script management where only one script can be active at a time for AI calls. System features proper script activation controls, allowing agents to switch between different project scripts easily. The AI calling system uses only the currently active script for both initial greeting and conversation flow, with automatic fallback to default Bayti greeting when no script is active. Fixed edit/delete functionality and ensured proper database constraint handling for seamless script management.
 
 # User Preferences
 

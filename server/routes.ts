@@ -168,24 +168,24 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
       let systemPrompt = "You are Bayti, an expert real estate AI assistant specializing in Dubai and UAE properties. You help clients find homes, apartments, villas, and investment properties. Be conversational, helpful, and ask relevant follow-up questions about budget, location preferences, property type, bedrooms, and timeline. Always respond to exactly what the user said and ask natural follow-up questions. Keep responses concise (under 100 words) and natural for phone conversations. Never repeat previous responses.";
       
       try {
-        // Try to get the most recent active script for system prompt
-        const scripts = await storage.getProjectScripts();
-        if (scripts.length > 0) {
-          const latestScript = scripts[0]; // Most recently updated script
-          
+        // Get the currently active script for system prompt
+        const activeScript = await storage.getActiveProjectScript();
+        if (activeScript) {
           // Process placeholders for the script
           const placeholders = {
             lead_name: "valued client",
-            project_name: latestScript.projectName,
-            ...latestScript.placeholders
+            project_name: activeScript.projectName,
+            ...activeScript.placeholders
           };
           
-          const processedScript = processScriptPlaceholders(latestScript.scriptContent, placeholders);
-          systemPrompt = `You are a sales agent for ${latestScript.projectName}. Use this script as guidance for the conversation: ${processedScript}. Adapt the script naturally to the conversation flow while maintaining the key points and information. Be conversational and respond naturally to what the caller says. Keep responses concise (under 100 words) and natural for phone conversations.`;
-          console.log(`Using custom script system prompt for: ${latestScript.projectName}`);
+          const processedScript = processScriptPlaceholders(activeScript.scriptContent, placeholders);
+          systemPrompt = `You are a sales agent for ${activeScript.projectName}. Use this script as guidance for the conversation: ${processedScript}. Adapt the script naturally to the conversation flow while maintaining the key points and information. Be conversational and respond naturally to what the caller says. Keep responses concise (under 100 words) and natural for phone conversations.`;
+          console.log(`Using active script system prompt for: ${activeScript.projectName}`);
+        } else {
+          console.log('No active script found, using default system prompt');
         }
       } catch (error) {
-        console.log('No custom scripts found, using default system prompt');
+        console.log('Error fetching active script, using default system prompt:', error);
       }
       
       context.push({
@@ -620,40 +620,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       conversationContexts.set(CallSid, []);
       console.log(`Initialized conversation context for call ${CallSid}`);
       
-      // Get custom script for initial greeting if available
+      // Get active script for initial greeting if available
       let greeting = "Hello! You've reached Bayti, your AI real estate assistant. I'm here to help you find your perfect home in Dubai and the UAE. How can I assist you today?";
       
       try {
-        // Try to get the most recent active script
-        const scripts = await storage.getProjectScripts();
-        if (scripts.length > 0) {
-          const latestScript = scripts[0]; // Most recently updated script
+        // Get the currently active script
+        const activeScript = await storage.getActiveProjectScript();
+        if (activeScript) {
+          // Process placeholders in script content
+          const placeholders = {
+            lead_name: "valued client",
+            project_name: activeScript.projectName,
+            ...activeScript.placeholders
+          };
           
-          // Extract opening/greeting from script content if available
-          const scriptLines = latestScript.scriptContent.split('\n');
-          const greetingLine = scriptLines.find(line => 
-            line.toLowerCase().includes('hello') || 
-            line.toLowerCase().includes('hi') || 
-            line.toLowerCase().includes('welcome') ||
-            line.length > 50 // Assume first substantial line is greeting
-          );
-          
-          if (greetingLine) {
-            // Process placeholders in greeting
-            const placeholders = {
-              lead_name: "valued client",
-              project_name: latestScript.projectName,
-              ...latestScript.placeholders
-            };
-            greeting = processScriptPlaceholders(greetingLine, placeholders);
-            console.log(`Using custom greeting from script: ${latestScript.projectName}`);
-          } else {
-            // Use the full script content as system context but keep default greeting
-            greeting = `Hello! This is ${latestScript.projectName} calling. ${latestScript.scriptContent.substring(0, 200)}`;
+          // Use the first line or opening of the script as greeting
+          const scriptLines = activeScript.scriptContent.split('\n').filter(line => line.trim());
+          if (scriptLines.length > 0) {
+            greeting = processScriptPlaceholders(scriptLines[0], placeholders);
+            console.log(`Using active script greeting: ${activeScript.projectName}`);
           }
+        } else {
+          console.log('No active script found, using default greeting');
         }
       } catch (error) {
-        console.log('No custom scripts found, using default greeting');
+        console.log('Error fetching active script, using default greeting:', error);
       }
       
       // Return TwiML response for AI conversation
@@ -1011,6 +1002,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting project script:", error);
       res.status(500).json({ message: "Failed to delete project script" });
+    }
+  });
+
+  app.post("/api/v1/scripts/:id/activate", async (req, res) => {
+    try {
+      const script = await storage.setActiveProjectScript(req.params.id);
+      if (!script) {
+        return res.status(404).json({ message: "Project script not found" });
+      }
+      res.json({ message: "Project script activated successfully", script });
+    } catch (error) {
+      console.error("Error activating project script:", error);
+      res.status(500).json({ message: "Failed to activate project script", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/v1/scripts/active", async (req, res) => {
+    try {
+      const activeScript = await storage.getActiveProjectScript();
+      res.json({ activeScript });
+    } catch (error) {
+      console.error("Error fetching active project script:", error);
+      res.status(500).json({ message: "Failed to fetch active project script", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
