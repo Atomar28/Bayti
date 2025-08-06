@@ -223,10 +223,9 @@ export class DatabaseStorage implements IStorage {
     const existingSettings = await this.getAgentSettings(insertSettings.agentId!);
     
     if (existingSettings) {
-      const updateData = { ...insertSettings, updatedAt: new Date() };
       const [settings] = await db
         .update(agentSettings)
-        .set(updateData)
+        .set({ ...insertSettings, updatedAt: new Date() })
         .where(eq(agentSettings.agentId, insertSettings.agentId!))
         .returning();
       return settings;

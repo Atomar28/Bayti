@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { VoiceSettingsCard } from "@/components/settings/VoiceSettingsCard";
 import type { AgentSettings, CallScript } from "@shared/schema";
 
 export default function Settings() {
   const [agentSettings, setAgentSettings] = useState<Partial<AgentSettings>>({
     agentName: "Bayti Assistant",
     voiceType: "Professional Female",
+    elevenLabsVoiceId: "EXAVITQu4vr4xnSDxMaL",
+    elevenLabsModel: "eleven_monolingual_v1",
+    voiceSettings: {
+      stability: 0.5,
+      similarityBoost: 0.8,
+      style: 0,
+      speakerBoost: false
+    },
     speakingSpeed: "1.0",
     callTimeout: 30,
     targetIndustries: ["Technology", "Real Estate"],
@@ -29,27 +38,85 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch available voices from ElevenLabs
+  const { data: voices = [] } = useQuery({
+    queryKey: ["/api/elevenlabs/voices"],
+  });
+
+  // Fetch available models from ElevenLabs  
+  const { data: models = [] } = useQuery({
+    queryKey: ["/api/elevenlabs/models"],
+  });
+
+  // Load existing settings
+  const { data: existingSettings } = useQuery({
+    queryKey: ["/api/agent-settings/default-agent"],
+  });
+
+  useEffect(() => {
+    if (existingSettings) {
+      setAgentSettings(prev => ({
+        ...prev,
+        ...existingSettings,
+        voiceSettings: existingSettings.voiceSettings || {
+          stability: 0.5,
+          similarityBoost: 0.8,
+          style: 0,
+          speakerBoost: false
+        }
+      }));
+    }
+  }, [existingSettings]);
+
   const { data: scripts, isLoading: scriptsLoading } = useQuery({
     queryKey: ["/api/call-scripts"],
   });
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<AgentSettings>) => {
-      return await apiRequest("POST", "/api/agent-settings", {
+      const response = await apiRequest("POST", "/api/agent-settings", {
         ...settings,
         agentId: "default-agent", // In a real app, this would be the current user's ID
       });
+      return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/agent-settings/default-agent"] });
       toast({
         title: "Settings saved",
-        description: "Agent settings have been updated successfully.",
+        description: "Agent settings have been updated successfully. Voice settings synchronized with ElevenLabs.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Settings save error:", error);
       toast({
         title: "Error",
-        description: "Failed to save settings. Please try again.",
+        description: error?.message || "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const testVoiceMutation = useMutation({
+    mutationFn: async ({ voiceId, text }: { voiceId: string; text: string }) => {
+      const response = await apiRequest("POST", "/api/elevenlabs/test-voice", { voiceId, text });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Play the audio
+      if (data.audioUrl) {
+        const audio = new Audio(data.audioUrl);
+        audio.play().catch(console.error);
+      }
+      toast({
+        title: "Voice Test",
+        description: "Playing voice sample...",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Voice Test Failed",
+        description: error?.message || "Could not test voice. Please try again.",
         variant: "destructive",
       });
     },
@@ -144,6 +211,14 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Voice Configuration */}
+        <VoiceSettingsCard
+          voices={voices}
+          models={models}
+          settings={agentSettings}
+          onSettingsChange={setAgentSettings}
+        />
 
         {/* Agent Settings */}
         <Card className="mb-8 border-0 shadow-lg">
@@ -361,9 +436,10 @@ export default function Settings() {
               <Button
                 onClick={handleSaveSettings}
                 disabled={saveSettingsMutation.isPending}
-                className="bg-brand-500 hover:bg-brand-600"
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
               >
-                Save Configuration
+                <Save className="w-4 h-4" />
+                {saveSettingsMutation.isPending ? "Saving..." : "Save All Settings"}
               </Button>
             </div>
           </CardContent>

@@ -417,8 +417,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertAgentSettingsSchema.parse(req.body);
       const settings = await storage.createOrUpdateAgentSettings(validatedData);
+      
+      // Update ElevenLabs voice settings if voice configuration changed
+      if (validatedData.elevenLabsVoiceId && validatedData.voiceSettings) {
+        try {
+          await elevenLabsService.updateVoiceSettings(
+            validatedData.elevenLabsVoiceId,
+            validatedData.voiceSettings
+          );
+        } catch (voiceError) {
+          console.warn("Failed to update ElevenLabs voice settings:", voiceError);
+          // Continue with saving settings even if voice update fails
+        }
+      }
+      
       res.json(settings);
     } catch (error) {
+      console.error("Agent settings save error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }

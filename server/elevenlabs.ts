@@ -115,6 +115,37 @@ class ElevenLabsService {
     }
   }
 
+  async updateVoiceSettings(voiceId: string, settings: {stability: number, similarityBoost: number, style?: number, speakerBoost?: boolean}): Promise<void> {
+    if (!this.apiKey) {
+      console.warn("ElevenLabs API key not available, skipping voice settings update");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/voices/${voiceId}/settings`, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "xi-api-key": this.apiKey
+        },
+        body: JSON.stringify({
+          stability: settings.stability,
+          similarity_boost: settings.similarityBoost,
+          style: settings.style || 0,
+          use_speaker_boost: settings.speakerBoost || false
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status} - ${await response.text()}`);
+      }
+    } catch (error) {
+      console.error("Error updating voice settings:", error);
+      throw error;
+    }
+  }
+
   async testVoice(voiceId: string, text: string = "Hello, this is a test of the voice quality."): Promise<string> {
     if (!this.apiKey) {
       throw new Error("ElevenLabs API key required for voice testing");
