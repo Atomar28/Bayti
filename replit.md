@@ -19,6 +19,8 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **Real-Time Analytics System (2025-08-07)**: Dashboard now displays authentic call performance data sourced directly from actual AI agent interactions. Key metrics include real call durations, genuine success rates based on completed/qualified calls, and accurate appointment booking counts. System automatically refreshes statistics every 30 seconds for live monitoring of agent performance. Qualified leads are precisely defined as appointments or callbacks successfully scheduled through AI conversations, providing actionable business intelligence for real estate operations.
 
+**AI Call Data Processing (2025-08-07)**: Implemented intelligent parsing of AI conversations to automatically extract lead information and appointment bookings. System now creates lead records with contact details (name, phone) and appointment records with scheduled times when AI agent successfully books callbacks or meetings. Call duration calculation works in real-time, and success rates are accurately computed based on meaningful conversations (excluding initiated-only calls). All appointment and lead data captured from AI interactions appears immediately on dashboard and leads pages.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

@@ -9,7 +9,7 @@ import {
   type ProjectScript, type InsertProjectScript
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, like, or, count, gte, lt, isNotNull, gt } from "drizzle-orm";
+import { eq, desc, and, like, or, count, gte, lt, isNotNull, gt, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -417,6 +417,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(callLogs);
 
+    // Success should be based on calls that actually engaged (not just initiated)
     const [successfulCallsResult] = await db
       .select({ count: count() })
       .from(callLogs)
@@ -424,9 +425,16 @@ export class DatabaseStorage implements IStorage {
         eq(callLogs.status, 'qualified'),
         eq(callLogs.status, 'completed')
       ));
+      
+    // Only count calls that actually had conversation (exclude just initiated calls)
+    const [meaningfulCallsResult] = await db
+      .select({ count: count() })
+      .from(callLogs)
+      .where(sql`status != 'initiated'`);
 
-    const successRate = allCallsResult.count > 0 
-      ? Math.round((successfulCallsResult.count / allCallsResult.count) * 100 * 10) / 10
+    // Calculate success rate based on meaningful calls only (excluding initiated calls)  
+    const successRate = meaningfulCallsResult.count > 0 
+      ? Math.round((successfulCallsResult.count / meaningfulCallsResult.count) * 100 * 10) / 10
       : 0;
 
     // Remove debug logging for production
@@ -438,7 +446,8 @@ export class DatabaseStorage implements IStorage {
     //   avgDuration,
     //   successRate,
     //   allCallsCount: allCallsResult.count,
-    //   successfulCallsCount: successfulCallsResult.count
+    //   successfulCallsCount: successfulCallsResult.count,
+    //   meaningfulCallsCount: meaningfulCallsResult.count
     // });
 
     return {

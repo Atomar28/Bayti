@@ -623,13 +623,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Incoming call from ${From}, SID: ${CallSid}`);
 
-      // Store call in database
+      // Store call in database with call start tracking
+      const callStartTime = new Date();
       await storage.createCallLog({
         phoneNumber: From,
         status: 'incoming',
-        startTime: new Date(),
+        startTime: callStartTime,
         notes: `Bayti AI call from ${From}, SID: ${CallSid}`
       });
+      
+      console.log(`Call started at ${callStartTime.toISOString()} for ${From}`);
 
       // Initialize conversation context for this call
       conversationContexts.set(CallSid, []);
@@ -728,10 +731,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const callLog = result.callLogs.find(log => log.notes?.includes(call_sid));
       
       if (callLog) {
+        const updatedNotes = `${callLog.notes}\nTranscription: ${SpeechResult}\nAI Response: ${aiResponse}`;
+        
+        // Calculate call duration from start time
+        const now = new Date();
+        const startTime = callLog.startTime;
+        const duration = Math.round((now.getTime() - startTime.getTime()) / 1000);
+        
+        // Check if this conversation indicates an appointment booking or qualified lead
+        const conversationText = updatedNotes.toLowerCase();
+        let callStatus = 'completed';
+        let leadCreated = false;
+        
+        // Look for appointment booking indicators
+        if (conversationText.includes('book') || conversationText.includes('schedule') || 
+            conversationText.includes('appointment') || conversationText.includes('callback') ||
+            conversationText.includes('tomorrow') || conversationText.includes('p.m.') ||
+            conversationText.includes('call back')) {
+          
+          callStatus = 'qualified';
+          
+          // Extract lead information from conversation
+          const nameMatch = updatedNotes.match(/my name is ([a-zA-Z]+)/i);
+          const timeMatch = updatedNotes.match(/(\d{1,2})\s?p\.?m\.?/i) || updatedNotes.match(/(\d{1,2}:\d{2})/);
+          const phoneNumber = callLog.phoneNumber;
+          
+          if (nameMatch && phoneNumber) {
+            const leadName = nameMatch[1];
+            
+            // Create lead record
+            try {
+              const newLead = await storage.createLead({
+                name: leadName,
+                phoneNumber: phoneNumber,
+                status: 'qualified',
+                source: 'AI Call',
+                notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
+                qualificationScore: 85
+              });
+              
+              // Create appointment record if time was mentioned
+              if (timeMatch) {
+                const scheduledTime = new Date();
+                scheduledTime.setDate(scheduledTime.getDate() + 1); // Tomorrow
+                
+                if (timeMatch[1].includes(':')) {
+                  const [hour, minute] = timeMatch[1].split(':');
+                  scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+                } else {
+                  scheduledTime.setHours(parseInt(timeMatch[1]), 0, 0, 0);
+                }
+                
+                await storage.createAppointment({
+                  leadId: newLead.id,
+                  callLogId: callLog.id,
+                  title: `Callback for ${leadName}`,
+                  description: 'AI-scheduled callback for property inquiry',
+                  scheduledTime: scheduledTime,
+                  duration: 30,
+                  status: 'scheduled',
+                  appointmentType: 'callback'
+                });
+                
+                console.log(`Created appointment for ${leadName} at ${scheduledTime}`);
+              }
+              
+              leadCreated = true;
+              console.log(`Created qualified lead for ${leadName}: ${newLead.id}`);
+              
+            } catch (error) {
+              console.error('Error creating lead/appointment:', error);
+            }
+          }
+        }
+        
         await storage.updateCallLog(callLog.id, {
-          status: 'completed',
-          notes: `${callLog.notes}\nTranscription: ${SpeechResult}\nAI Response: ${aiResponse}`
+          status: callStatus,
+          duration: duration,
+          endTime: now,
+          notes: updatedNotes
         });
+        
+        console.log(`Updated call ${call_sid}: duration=${duration}s, status=${callStatus}, lead_created=${leadCreated}`);
       }
 
       // Return TwiML with AI response and continue conversation
