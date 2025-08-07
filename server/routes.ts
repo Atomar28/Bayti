@@ -759,48 +759,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (nameMatch && phoneNumber) {
             const leadName = nameMatch[1];
             
-            // Create lead record
-            try {
-              const newLead = await storage.createLead({
-                name: leadName,
-                phoneNumber: phoneNumber,
-                status: 'qualified',
-                source: 'AI Call',
-                notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
-                qualificationScore: 85
-              });
+            // Check if lead already exists for this phone number to prevent duplicates
+            const existingLeads = await storage.getLeads();
+            const existingLead = existingLeads.leads.find(lead => 
+              lead.phoneNumber === phoneNumber || lead.name === leadName
+            );
+            
+            if (!existingLead) {
+              // Create lead record only if it doesn't exist
+              try {
+                const newLead = await storage.createLead({
+                  name: leadName,
+                  phoneNumber: phoneNumber,
+                  status: 'qualified',
+                  source: 'AI Call',
+                  notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
+                  qualificationScore: 85
+                });
               
-              // Create appointment record if time was mentioned
-              if (timeMatch) {
-                const scheduledTime = new Date();
-                scheduledTime.setDate(scheduledTime.getDate() + 1); // Tomorrow
-                
-                if (timeMatch[1].includes(':')) {
-                  const [hour, minute] = timeMatch[1].split(':');
-                  scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
-                } else {
-                  scheduledTime.setHours(parseInt(timeMatch[1]), 0, 0, 0);
+                // Create appointment record if time was mentioned
+                if (timeMatch) {
+                  const scheduledTime = new Date();
+                  scheduledTime.setDate(scheduledTime.getDate() + 1); // Tomorrow
+                  
+                  if (timeMatch[1].includes(':')) {
+                    const [hour, minute] = timeMatch[1].split(':');
+                    scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+                  } else {
+                    scheduledTime.setHours(parseInt(timeMatch[1]), 0, 0, 0);
+                  }
+                  
+                  await storage.createAppointment({
+                    leadId: newLead.id,
+                    callLogId: callLog.id,
+                    title: `Callback for ${leadName}`,
+                    description: 'AI-scheduled callback for property inquiry',
+                    scheduledTime: scheduledTime,
+                    duration: 30,
+                    status: 'scheduled',
+                    appointmentType: 'callback'
+                  });
+                  
+                  console.log(`Created appointment for ${leadName} at ${scheduledTime}`);
                 }
                 
-                await storage.createAppointment({
-                  leadId: newLead.id,
-                  callLogId: callLog.id,
-                  title: `Callback for ${leadName}`,
-                  description: 'AI-scheduled callback for property inquiry',
-                  scheduledTime: scheduledTime,
-                  duration: 30,
-                  status: 'scheduled',
-                  appointmentType: 'callback'
-                });
+                leadCreated = true;
+                console.log(`Created qualified lead for ${leadName}: ${newLead.id}`);
                 
-                console.log(`Created appointment for ${leadName} at ${scheduledTime}`);
+              } catch (error) {
+                console.error('Error creating lead/appointment:', error);
               }
-              
-              leadCreated = true;
-              console.log(`Created qualified lead for ${leadName}: ${newLead.id}`);
-              
-            } catch (error) {
-              console.error('Error creating lead/appointment:', error);
+            } else {
+              // Lead already exists, just mark as qualified
+              leadCreated = false;
+              console.log(`Lead already exists for ${leadName}/${phoneNumber}, skipping duplicate creation`);
             }
           }
         }
