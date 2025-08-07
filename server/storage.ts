@@ -9,7 +9,7 @@ import {
   type ProjectScript, type InsertProjectScript
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, like, or, count } from "drizzle-orm";
+import { eq, desc, and, like, or, count, gte, lt, isNotNull, gt } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -357,36 +357,81 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Get total calls made today (if none today, show total calls this week)
     const [todayCallsResult] = await db
       .select({ count: count() })
       .from(callLogs)
       .where(and(
-        eq(callLogs.startTime, today),
-        eq(callLogs.startTime, tomorrow)
+        gte(callLogs.startTime, today),
+        lt(callLogs.startTime, tomorrow)
       ));
 
+    // If no calls today, get this week's calls
+    let totalCallsToday = todayCallsResult.count;
+    if (totalCallsToday === 0) {
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      const [weekCallsResult] = await db
+        .select({ count: count() })
+        .from(callLogs)
+        .where(gte(callLogs.startTime, weekAgo));
+      
+      totalCallsToday = weekCallsResult.count;
+    }
+
+    // Get qualified leads (all time)
     const [qualifiedResult] = await db
       .select({ count: count() })
       .from(callLogs)
       .where(eq(callLogs.status, 'qualified'));
 
-    const [avgDurationResult] = await db
-      .select({ avg: count() })
+    // Get average call duration from actual calls with duration data
+    const callsWithDuration = await db
+      .select({ duration: callLogs.duration })
       .from(callLogs)
-      .where(eq(callLogs.status, 'completed'));
+      .where(and(
+        isNotNull(callLogs.duration),
+        gt(callLogs.duration, 0)
+      ));
 
-    const [successRateResult] = await db
-      .select({ 
-        total: count(),
-        qualified: count()
-      })
+    let avgDuration = 0;
+    if (callsWithDuration.length > 0) {
+      const totalDuration = callsWithDuration.reduce((sum, call) => sum + (call.duration || 0), 0);
+      avgDuration = Math.round(totalDuration / callsWithDuration.length);
+    }
+
+    // Calculate real success rate (qualified + completed vs total calls)
+    const [allCallsResult] = await db
+      .select({ count: count() })
       .from(callLogs);
 
+    const [successfulCallsResult] = await db
+      .select({ count: count() })
+      .from(callLogs)
+      .where(or(
+        eq(callLogs.status, 'qualified'),
+        eq(callLogs.status, 'completed')
+      ));
+
+    const successRate = allCallsResult.count > 0 
+      ? Math.round((successfulCallsResult.count / allCallsResult.count) * 100 * 10) / 10
+      : 0;
+
+    console.log('Call Stats Debug:', {
+      todayCallsCount: todayCallsResult.count,
+      qualifiedCount: qualifiedResult.count,
+      avgDuration,
+      successRate,
+      allCallsCount: allCallsResult.count,
+      successfulCallsCount: successfulCallsResult.count
+    });
+
     return {
-      totalCallsToday: todayCallsResult.count,
+      totalCallsToday: totalCallsToday,
       qualifiedLeads: qualifiedResult.count,
-      avgDuration: 272, // Mock average duration in seconds (4:32)
-      successRate: 25.5
+      avgDuration: avgDuration,
+      successRate: successRate
     };
   }
 }

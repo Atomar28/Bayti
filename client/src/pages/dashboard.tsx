@@ -15,14 +15,19 @@ import SettingsTab from "@/components/settings/SettingsTab";
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchOnWindowFocus: true,
   });
 
   const { data: recentCallsData, isLoading: callsLoading } = useQuery({
     queryKey: ["/api/call-logs", { page: 1, limit: 5 }],
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchOnWindowFocus: true,
   });
 
   const { data: scriptsData, isLoading: scriptsLoading } = useQuery({
     queryKey: ["/api/call-scripts"],
+    refetchInterval: 60000, // Refresh every minute (scripts change less frequently)
   });
 
   const recentCalls = (recentCallsData as any)?.callLogs || [];
@@ -122,7 +127,7 @@ export default function Dashboard() {
             {/* Enhanced Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
-          title="Total Calls Today"
+          title={(stats as any)?.totalCallsToday > 0 ? "Total Calls Today" : "Recent Calls"}
           value={(stats as any)?.totalCallsToday || 0}
           icon={Phone}
           iconColor="text-blue-600"
@@ -194,12 +199,12 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Today's Goal</h3>
-                  <p className="text-amber-100">25 qualified leads</p>
+                  <p className="text-amber-100">{(stats as any)?.qualifiedLeads || 0} / 25 qualified leads</p>
                   <div className="flex items-center mt-3">
                     <div className="flex-1 bg-white/20 rounded-full h-2 mr-2">
-                      <div className="bg-white h-2 rounded-full" style={{width: '60%'}}></div>
+                      <div className="bg-white h-2 rounded-full" style={{width: `${Math.min(((stats as any)?.qualifiedLeads || 0) / 25 * 100, 100)}%`}}></div>
                     </div>
-                    <span className="text-sm">60%</span>
+                    <span className="text-sm">{Math.min(Math.round(((stats as any)?.qualifiedLeads || 0) / 25 * 100), 100)}%</span>
                   </div>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
