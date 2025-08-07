@@ -134,7 +134,7 @@ export default function Dashboard() {
           iconBgColor="bg-blue-100"
         />
         <StatsCard
-          title="Qualified Leads"
+          title="Appointments Booked"
           value={(stats as any)?.qualifiedLeads || 0}
           icon={UserPlus}
           iconColor="text-emerald-600"
@@ -199,7 +199,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Today's Goal</h3>
-                  <p className="text-amber-100">{(stats as any)?.qualifiedLeads || 0} / 25 qualified leads</p>
+                  <p className="text-amber-100">{(stats as any)?.qualifiedLeads || 0} / 25 appointments booked</p>
                   <div className="flex items-center mt-3">
                     <div className="flex-1 bg-white/20 rounded-full h-2 mr-2">
                       <div className="bg-white h-2 rounded-full" style={{width: `${Math.min(((stats as any)?.qualifiedLeads || 0) / 25 * 100, 100)}%`}}></div>

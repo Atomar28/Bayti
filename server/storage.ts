@@ -380,11 +380,22 @@ export class DatabaseStorage implements IStorage {
       totalCallsToday = weekCallsResult.count;
     }
 
-    // Get qualified leads (all time)
-    const [qualifiedResult] = await db
+    // Get qualified leads from appointments table (actual bookings made through AI)
+    const [appointmentsResult] = await db
+      .select({ count: count() })
+      .from(appointments)
+      .where(or(
+        eq(appointments.status, 'confirmed'),
+        eq(appointments.status, 'scheduled')
+      ));
+
+    // Also include calls marked as qualified in call logs
+    const [qualifiedCallsResult] = await db
       .select({ count: count() })
       .from(callLogs)
       .where(eq(callLogs.status, 'qualified'));
+
+    const totalQualifiedLeads = appointmentsResult.count + qualifiedCallsResult.count;
 
     // Get average call duration from actual calls with duration data
     const callsWithDuration = await db
@@ -401,7 +412,7 @@ export class DatabaseStorage implements IStorage {
       avgDuration = Math.round(totalDuration / callsWithDuration.length);
     }
 
-    // Calculate real success rate (qualified + completed vs total calls)
+    // Calculate real success rate (appointments/callbacks + completed vs total calls)
     const [allCallsResult] = await db
       .select({ count: count() })
       .from(callLogs);
@@ -418,18 +429,21 @@ export class DatabaseStorage implements IStorage {
       ? Math.round((successfulCallsResult.count / allCallsResult.count) * 100 * 10) / 10
       : 0;
 
-    console.log('Call Stats Debug:', {
-      todayCallsCount: todayCallsResult.count,
-      qualifiedCount: qualifiedResult.count,
-      avgDuration,
-      successRate,
-      allCallsCount: allCallsResult.count,
-      successfulCallsCount: successfulCallsResult.count
-    });
+    // Remove debug logging for production
+    // console.log('Call Stats Debug:', {
+    //   todayCallsCount: todayCallsResult.count,
+    //   appointmentsCount: appointmentsResult.count,
+    //   qualifiedCallsCount: qualifiedCallsResult.count,
+    //   totalQualifiedLeads: totalQualifiedLeads,
+    //   avgDuration,
+    //   successRate,
+    //   allCallsCount: allCallsResult.count,
+    //   successfulCallsCount: successfulCallsResult.count
+    // });
 
     return {
       totalCallsToday: totalCallsToday,
-      qualifiedLeads: qualifiedResult.count,
+      qualifiedLeads: totalQualifiedLeads,
       avgDuration: avgDuration,
       successRate: successRate
     };
