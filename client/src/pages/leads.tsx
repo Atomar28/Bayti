@@ -16,6 +16,11 @@ export default function Leads() {
     queryKey: ["/api/leads"],
   });
 
+  // Fetch appointments to show callback details on lead cards
+  const { data: appointmentsData } = useQuery({
+    queryKey: ["/api/v1/appointments"],
+  });
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("GET", "/api/export/leads");
@@ -45,6 +50,30 @@ export default function Leads() {
   });
 
   const leads = (leadsData as any)?.leads || [];
+  const appointments = (appointmentsData as any) || [];
+
+  // Function to get appointment details for a lead
+  const getLeadAppointment = (leadId: string) => {
+    return appointments.find((apt: any) => apt.leadId === leadId);
+  };
+
+  // Function to format appointment date/time
+  const formatAppointmentTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    const isToday = new Date().toDateString() === date.toDateString();
+    const isTomorrow = new Date(Date.now() + 86400000).toDateString() === date.toDateString();
+    
+    const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    
+    if (isToday) return `Today at ${timeStr}`;
+    if (isTomorrow) return `Tomorrow at ${timeStr}`;
+    return date.toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -159,6 +188,25 @@ export default function Leads() {
                     <Calendar className="w-4 h-4 mr-2" />
                     <span>{formatLastContact(lead.lastContactDate)}</span>
                   </div>
+                  
+                  {/* Show appointment details if this lead has a scheduled callback */}
+                  {(() => {
+                    const appointment = getLeadAppointment(lead.id);
+                    if (appointment) {
+                      return (
+                        <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-sm font-medium text-blue-900">📅 Scheduled Callback</p>
+                          <p className="text-xs text-blue-700">
+                            {formatAppointmentTime(appointment.scheduledTime)}
+                          </p>
+                          {appointment.description && (
+                            <p className="text-xs text-blue-600 mt-1">{appointment.description}</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-200">

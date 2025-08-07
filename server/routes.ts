@@ -540,6 +540,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Twilio call status webhook to handle dropped calls
+  app.post("/api/ai/call-status", async (req, res) => {
+    try {
+      const { CallSid, CallStatus, CallDuration } = req.body;
+      console.log(`Call status webhook: ${CallSid} - ${CallStatus}`);
+      
+      // Find the call log by call SID
+      const result = await storage.getCallLogs(1, 100);
+      const callLog = result.callLogs.find(log => log.notes?.includes(CallSid));
+      
+      if (callLog) {
+        let status = 'completed';
+        
+        // Handle different call statuses
+        switch (CallStatus) {
+          case 'no-answer':
+          case 'failed':
+          case 'busy':
+          case 'canceled':
+            status = 'failed';
+            break;
+          case 'completed':
+            // Only mark as completed if it actually had a conversation
+            status = callLog.status === 'qualified' ? 'qualified' : 'completed';
+            break;
+        }
+        
+        // Update call log with final status and duration
+        await storage.updateCallLog(callLog.id, {
+          status: status as any,
+          duration: CallDuration ? parseInt(CallDuration) : callLog.duration,
+          endTime: new Date()
+        });
+        
+        console.log(`Updated call ${CallSid}: status=${status}, duration=${CallDuration}s`);
+      }
+      
+      res.status(200).send('OK');
+    } catch (error) {
+      console.error('Call status webhook error:', error);
+      res.status(500).send('Error');
+    }
+  });
+
   // AI Calling Integration - Direct Node.js implementation
   app.post("/api/ai/make-test-call", async (req, res) => {
     try {
@@ -568,7 +612,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const call = await client.calls.create({
         url: webhook_url,
         to: to_number,
-        from: process.env.TWILIO_PHONE_NUMBER || ""
+        from: process.env.TWILIO_PHONE_NUMBER || "",
+        statusCallback: `https://${replit_domain}/api/ai/call-status`,
+        statusCallbackEvent: ['completed', 'no-answer', 'failed', 'busy', 'canceled'],
+        statusCallbackMethod: 'POST'
       });
 
       // Store call in database

@@ -427,29 +427,17 @@ export class DatabaseStorage implements IStorage {
       avgDuration = Math.round(totalDuration / callsWithDuration.length);
     }
 
-    // Calculate real success rate (appointments/callbacks + completed vs total calls)
-    const [allCallsResult] = await db
-      .select({ count: count() })
-      .from(callLogs);
-
-    // Success should be based on calls that actually engaged (not just initiated)
-    const [successfulCallsResult] = await db
-      .select({ count: count() })
-      .from(callLogs)
-      .where(or(
-        eq(callLogs.status, 'qualified'),
-        eq(callLogs.status, 'completed')
-      ));
-      
+    // Calculate real success rate: appointments booked divided by total meaningful calls
     // Only count calls that actually had conversation (exclude just initiated calls)
     const [meaningfulCallsResult] = await db
       .select({ count: count() })
       .from(callLogs)
       .where(sql`status != 'initiated'`);
 
-    // Calculate success rate based on meaningful calls only (excluding initiated calls)  
+    // Success rate = appointments booked / meaningful calls (not qualified calls)
+    // This gives true conversion rate: how many calls resulted in actual bookings
     const successRate = meaningfulCallsResult.count > 0 
-      ? Math.round((successfulCallsResult.count / meaningfulCallsResult.count) * 100 * 10) / 10
+      ? Math.round((totalQualifiedLeads / meaningfulCallsResult.count) * 100 * 10) / 10
       : 0;
 
     // Remove debug logging for production
