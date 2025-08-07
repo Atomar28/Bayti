@@ -357,16 +357,17 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get total calls made today (if none today, show total calls this week)
+    // Get meaningful calls made today (exclude initiated-only calls)
     const [todayCallsResult] = await db
       .select({ count: count() })
       .from(callLogs)
       .where(and(
         gte(callLogs.startTime, today),
-        lt(callLogs.startTime, tomorrow)
+        lt(callLogs.startTime, tomorrow),
+        sql`status != 'initiated'`
       ));
 
-    // If no calls today, get this week's calls
+    // If no meaningful calls today, get this week's meaningful calls
     let totalCallsToday = todayCallsResult.count;
     if (totalCallsToday === 0) {
       const weekAgo = new Date(today);
@@ -375,7 +376,10 @@ export class DatabaseStorage implements IStorage {
       const [weekCallsResult] = await db
         .select({ count: count() })
         .from(callLogs)
-        .where(gte(callLogs.startTime, weekAgo));
+        .where(and(
+          gte(callLogs.startTime, weekAgo),
+          sql`status != 'initiated'`
+        ));
       
       totalCallsToday = weekCallsResult.count;
     }
@@ -389,26 +393,37 @@ export class DatabaseStorage implements IStorage {
         eq(appointments.status, 'scheduled')
       ));
 
-    // Also include calls marked as qualified in call logs
-    const [qualifiedCallsResult] = await db
-      .select({ count: count() })
-      .from(callLogs)
-      .where(eq(callLogs.status, 'qualified'));
+    // Use appointments count as the primary metric since it represents actual bookings
+    // Qualified calls in call_logs are automatically converted to appointments
+    const totalQualifiedLeads = appointmentsResult.count;
 
-    const totalQualifiedLeads = appointmentsResult.count + qualifiedCallsResult.count;
-
-    // Get average call duration from actual calls with duration data
+    // Get average call duration from actual meaningful calls
     const callsWithDuration = await db
-      .select({ duration: callLogs.duration })
+      .select({ 
+        startTime: callLogs.startTime,
+        endTime: callLogs.endTime,
+        duration: callLogs.duration 
+      })
       .from(callLogs)
       .where(and(
-        isNotNull(callLogs.duration),
-        gt(callLogs.duration, 0)
+        isNotNull(callLogs.startTime),
+        isNotNull(callLogs.endTime),
+        sql`status != 'initiated'`
       ));
 
     let avgDuration = 0;
     if (callsWithDuration.length > 0) {
-      const totalDuration = callsWithDuration.reduce((sum, call) => sum + (call.duration || 0), 0);
+      let totalDuration = 0;
+      for (const call of callsWithDuration) {
+        if (call.startTime && call.endTime) {
+          // Calculate actual duration from timestamps (this is the real call duration)
+          const actualDurationSeconds = Math.floor((call.endTime.getTime() - call.startTime.getTime()) / 1000);
+          totalDuration += actualDurationSeconds;
+        } else if (call.duration && call.duration > 0) {
+          // Fallback to stored duration if timestamps aren't available
+          totalDuration += call.duration;
+        }
+      }
       avgDuration = Math.round(totalDuration / callsWithDuration.length);
     }
 
@@ -439,15 +454,17 @@ export class DatabaseStorage implements IStorage {
 
     // Remove debug logging for production
     // console.log('Call Stats Debug:', {
-    //   todayCallsCount: todayCallsResult.count,
-    //   appointmentsCount: appointmentsResult.count,
-    //   qualifiedCallsCount: qualifiedCallsResult.count,
+    //   totalCallsToday,
+    //   appointmentsResult: appointmentsResult.count,
     //   totalQualifiedLeads: totalQualifiedLeads,
     //   avgDuration,
     //   successRate,
-    //   allCallsCount: allCallsResult.count,
-    //   successfulCallsCount: successfulCallsResult.count,
-    //   meaningfulCallsCount: meaningfulCallsResult.count
+    //   callsWithDurationLength: callsWithDuration.length,
+    //   callsWithDuration: callsWithDuration.map(c => ({
+    //     duration: c.duration,
+    //     actualDuration: c.startTime && c.endTime ? 
+    //       Math.floor((c.endTime.getTime() - c.startTime.getTime()) / 1000) : null
+    //   }))
     // });
 
     return {
