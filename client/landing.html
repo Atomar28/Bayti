@@ -273,10 +273,10 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <button class="hidden md:block px-4 py-2 text-white/80 hover:text-white transition-colors">
+                    <button id="signin-btn" class="hidden md:block px-4 py-2 text-white/80 hover:text-white transition-colors">
                         Sign In
                     </button>
-                    <button class="px-6 py-2 bg-white text-purple-800 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+                    <button id="getstarted-btn" class="px-6 py-2 bg-white text-purple-800 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
                         Get Started
                     </button>
                 </div>
@@ -299,6 +299,8 @@
                 <a href="#demo" class="block px-3 py-2 text-white/80">Demo</a>
                 <a href="#pricing" class="block px-3 py-2 text-white/80">Pricing</a>
                 <a href="#contact" class="block px-3 py-2 text-white/80">Contact</a>
+                <button id="mobile-signin-btn" class="block w-full text-left px-3 py-2 text-white/80">Sign In</button>
+                <button id="mobile-getstarted-btn" class="block w-full text-left px-3 py-2 bg-white text-purple-800 rounded-lg hover:bg-gray-100 transition-colors mt-2">Get Started</button>
             </div>
         </div>
     </nav>
@@ -937,6 +939,26 @@
                     element.style.transform = `translateY(${scrolled * speed}px)`;
                 });
             }
+        });
+
+        // Navigation button handlers
+        function handleSignIn() {
+            window.location.href = '/auth';
+        }
+
+        function handleGetStarted() {
+            window.location.href = '/auth#signup';
+        }
+
+        // Add event listeners for navigation buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            // Desktop buttons
+            document.getElementById('signin-btn').addEventListener('click', handleSignIn);
+            document.getElementById('getstarted-btn').addEventListener('click', handleGetStarted);
+
+            // Mobile buttons
+            document.getElementById('mobile-signin-btn').addEventListener('click', handleSignIn);
+            document.getElementById('mobile-getstarted-btn').addEventListener('click', handleGetStarted);
         });
     </script>
 </body>

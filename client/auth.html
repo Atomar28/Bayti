@@ -193,6 +193,13 @@
     </div>
 
     <script>
+        // Check URL hash to determine initial tab
+        const urlHash = window.location.hash;
+        if (urlHash === '#signup') {
+            // Show signup form initially
+            document.getElementById('signup-tab').click();
+        }
+
         // Tab switching
         const signinTab = document.getElementById('signin-tab');
         const signupTab = document.getElementById('signup-tab');
