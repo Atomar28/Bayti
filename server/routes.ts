@@ -887,72 +887,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (conversationText.includes('book') || conversationText.includes('schedule') || 
             conversationText.includes('appointment') || conversationText.includes('callback') ||
             conversationText.includes('tomorrow') || conversationText.includes('p.m.') ||
-            conversationText.includes('call back')) {
+            conversationText.includes('call back') || conversationText.includes('august') ||
+            conversationText.includes('september') || conversationText.includes('11am') ||
+            conversationText.includes('11 am') || conversationText.includes('28th')) {
           
           callStatus = 'qualified';
           
-          // Extract lead information from conversation
-          const nameMatch = updatedNotes.match(/my name is ([a-zA-Z]+)/i);
-          const timeMatch = updatedNotes.match(/(\d{1,2})\s?p\.?m\.?/i) || updatedNotes.match(/(\d{1,2}:\d{2})/);
-          const phoneNumber = callLog.phoneNumber;
+          // Extract lead information from conversation - more flexible name extraction
+          const nameMatch = updatedNotes.match(/my name is ([a-zA-Z]+)/i) || 
+                           updatedNotes.match(/I(?:'m| am) ([a-zA-Z]+)/i) ||
+                           updatedNotes.match(/this is ([a-zA-Z]+)/i);
           
-          if (nameMatch && phoneNumber) {
-            const leadName = nameMatch[1];
+          // Enhanced time and date matching
+          const timeMatch = updatedNotes.match(/(\d{1,2})\s?p\.?m\.?/i) || 
+                           updatedNotes.match(/(\d{1,2}:\d{2})/i) ||
+                           updatedNotes.match(/(\d{1,2})\s?am/i) ||
+                           updatedNotes.match(/11\s?am/i);
+          
+          const dateMatch = updatedNotes.match(/august\s?(\d{1,2})/i) ||
+                           updatedNotes.match(/september\s?(\d{1,2})/i) ||
+                           updatedNotes.match(/(\d{1,2})(?:st|nd|rd|th)/i);
+          
+          const phoneNumber = callLog.phoneNumber;
+          const leadName = nameMatch ? nameMatch[1] : null;
+          
+          // Check if lead already exists for this phone number to prevent duplicates
+          const existingLeads = await storage.getLeads();
+          const existingLead = existingLeads.leads.find(lead => 
+            lead.phoneNumber === phoneNumber || (leadName && lead.name === leadName)
+          );
+          
+          if (!existingLead) {
+            // Create lead record - even without name if appointment was booked
+            try {
+              const newLead = await storage.createLead({
+                name: leadName || "Unknown Caller",
+                phoneNumber: phoneNumber,
+                status: 'qualified',
+                notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
+                interestLevel: leadName ? 7 : 5 // Higher score if we got their name
+              });
             
-            // Check if lead already exists for this phone number to prevent duplicates
-            const existingLeads = await storage.getLeads();
-            const existingLead = existingLeads.leads.find(lead => 
-              lead.phoneNumber === phoneNumber || lead.name === leadName
-            );
-            
-            if (!existingLead) {
-              // Create lead record only if it doesn't exist
-              try {
-                const newLead = await storage.createLead({
-                  name: leadName,
-                  phoneNumber: phoneNumber,
-                  status: 'qualified',
-                  notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
-                  interestLevel: 5
-                });
-              
-                // Create appointment record if time was mentioned
-                if (timeMatch) {
-                  const scheduledTime = new Date();
-                  scheduledTime.setDate(scheduledTime.getDate() + 1); // Tomorrow
-                  
-                  if (timeMatch[1].includes(':')) {
-                    const [hour, minute] = timeMatch[1].split(':');
-                    scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
-                  } else {
-                    scheduledTime.setHours(parseInt(timeMatch[1]), 0, 0, 0);
+              // Create appointment record if time was mentioned
+              if (timeMatch || dateMatch) {
+                let scheduledTime = new Date();
+                
+                // Handle specific dates like "August 28th"
+                if (dateMatch) {
+                  const dayOfMonth = parseInt(dateMatch[1] || dateMatch[0]);
+                  if (updatedNotes.toLowerCase().includes('august')) {
+                    scheduledTime.setMonth(7); // August is month 7 (0-indexed)
+                    scheduledTime.setDate(dayOfMonth);
+                  } else if (updatedNotes.toLowerCase().includes('september')) {
+                    scheduledTime.setMonth(8); // September is month 8
+                    scheduledTime.setDate(dayOfMonth);
                   }
-                  
-                  await storage.createAppointment({
-                    leadId: newLead.id,
-                    callLogId: callLog.id,
-                    title: `Callback for ${leadName}`,
-                    description: 'AI-scheduled callback for property inquiry',
-                    scheduledTime: scheduledTime,
-                    duration: 30,
-                    status: 'scheduled',
-                    appointmentType: 'callback'
-                  });
-                  
-                  console.log(`Created appointment for ${leadName} at ${scheduledTime}`);
+                  // If date is in the past, move to next year
+                  if (scheduledTime < new Date()) {
+                    scheduledTime.setFullYear(scheduledTime.getFullYear() + 1);
+                  }
+                } else {
+                  // Default to tomorrow if only time mentioned
+                  scheduledTime.setDate(scheduledTime.getDate() + 1);
                 }
                 
-                leadCreated = true;
-                console.log(`Created qualified lead for ${leadName}: ${newLead.id}`);
+                // Handle time
+                if (timeMatch) {
+                  if (timeMatch[0].includes(':')) {
+                    const [hour, minute] = timeMatch[1].split(':');
+                    scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+                  } else if (updatedNotes.toLowerCase().includes('11am') || updatedNotes.toLowerCase().includes('11 am')) {
+                    scheduledTime.setHours(11, 0, 0, 0);
+                  } else {
+                    const hour = parseInt(timeMatch[1]);
+                    scheduledTime.setHours(hour, 0, 0, 0);
+                  }
+                } else {
+                  // Default to 11 AM if only date mentioned
+                  scheduledTime.setHours(11, 0, 0, 0);
+                }
                 
-              } catch (error) {
-                console.error('Error creating lead/appointment:', error);
+                await storage.createAppointment({
+                  leadId: newLead.id,
+                  callLogId: callLog.id,
+                  title: `Callback for ${leadName || 'Caller'}`,
+                  description: `AI-scheduled callback for property inquiry - ${leadName ? leadName + ' ' : ''}requested ${scheduledTime.toDateString()} at ${scheduledTime.toLocaleTimeString()}`,
+                  scheduledTime: scheduledTime,
+                  duration: 30,
+                  status: 'scheduled',
+                  appointmentType: 'callback'
+                });
+                
+                console.log(`Created appointment for ${leadName || 'Unknown Caller'} at ${scheduledTime}`);
               }
-            } else {
-              // Lead already exists, just mark as qualified
-              leadCreated = false;
-              console.log(`Lead already exists for ${leadName}/${phoneNumber}, skipping duplicate creation`);
+              
+              leadCreated = true;
+              console.log(`Created qualified lead for ${leadName || 'Unknown Caller'}: ${newLead.id}`);
+              
+            } catch (error) {
+              console.error('Error creating lead/appointment:', error);
             }
+          } else {
+            // Lead already exists, just mark as qualified
+            leadCreated = false;
+            console.log(`Lead already exists for ${leadName || 'caller'}/${phoneNumber}, skipping duplicate creation`);
           }
         }
         
