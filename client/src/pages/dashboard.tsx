@@ -83,12 +83,27 @@ export default function Dashboard() {
               <p className="mt-1 text-lg text-gray-600">Here's your call center overview for today</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200">
-                <Settings className="w-4 h-4 mr-2" />
-                Quick Setup
-              </Button>
+              {/* Header remains clean with just user info */}
             </div>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4 mb-6">
+          <TestCallDialog>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
+              <Phone className="w-4 h-4 mr-2" />
+              Start Call
+            </Button>
+          </TestCallDialog>
+          <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200" onClick={() => {
+            // Navigate to settings tab for quick setup
+            const settingsTab = document.querySelector('[value="settings"]') as HTMLElement;
+            if (settingsTab) settingsTab.click();
+          }}>
+            <Settings className="w-4 h-4 mr-2" />
+            Quick Setup
+          </Button>
         </div>
 
         {/* Main Tabs Navigation */}
