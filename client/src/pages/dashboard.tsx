@@ -80,7 +80,7 @@ export default function Dashboard() {
         <div className="mb-12">
           <div className="flex items-center justify-between">
             <div className="space-y-3">
-              <h1 className="text-5xl font-bold text-gray-900 tracking-tight">Welcome back, Agent John</h1>
+              <h1 className="text-5xl font-bold gradient-text tracking-tight">Welcome back, Agent John</h1>
               <p className="text-xl text-gray-600 max-w-2xl">Here's your call center overview for today - track your performance and manage leads efficiently</p>
             </div>
             <div className="flex items-center space-x-4">

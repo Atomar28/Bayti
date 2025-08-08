@@ -117,22 +117,47 @@ export default function Header({ currentPage }: HeaderProps) {
               <Menu className="w-4 h-4" />
             </Button>
             
-            {/* Bayti Logo - Enhanced */}
+            {/* Bayti Logo - Premium Design */}
             <div className="flex items-center ml-2 md:ml-0">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4 shadow-beautiful transition-transform duration-300 hover:scale-110">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.41l7 7V20h-2v-6h-6v6H9v-8.59l3-3z"/>
-                </svg>
+              <div className="relative w-14 h-14 mr-4 group">
+                {/* Outer ring with gradient border */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-500 to-indigo-600 rounded-2xl opacity-90 group-hover:opacity-100 transition-all duration-300"></div>
+                {/* Inner background */}
+                <div className="logo-shine relative w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-beautiful-lg group-hover:scale-105 transition-all duration-300">
+                  {/* Custom Bayti Icon - Modern geometric house with AI elements */}
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V9.75a.75.75 0 00-.375-.65L12 7.5 8.25 9.1a.75.75 0 00-.375.65v11.25h4.5z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5l8.25 5.25v8.25H3.75V12.75L12 7.5z"/>
+                    {/* AI brain pattern overlay */}
+                    <circle cx="12" cy="11" r="1.5" fill="currentColor" opacity="0.7"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M10.5 9.5c.5-.5 1.5-.5 2 0M10.5 12.5c.5.5 1.5.5 2 0" opacity="0.6"/>
+                  </svg>
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                </div>
+                {/* Premium shine effect */}
+                <div className="absolute top-2 left-2 w-3 h-3 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300"></div>
               </div>
               <div className="hidden md:block space-y-1">
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
-                <p className="text-sm text-gray-500 font-medium">AI Calling Platform</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                  Bayti<span className="text-2xl">AI</span>
+                </h1>
+                <p className="text-sm font-medium bg-gradient-to-r from-gray-600 to-gray-500 bg-clip-text text-transparent">
+                  Intelligent Call Center Platform
+                </p>
               </div>
             </div>
             
-            <h2 className="ml-4 text-xl font-bold text-gray-900 md:hidden">
-              {currentPage}
-            </h2>
+            <div className="ml-4 md:hidden">
+              <h2 className="text-xl font-bold gradient-text">{currentPage}</h2>
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mt-1">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V9.75a.75.75 0 00-.375-.65L12 7.5 8.25 9.1a.75.75 0 00-.375.65v11.25h4.5z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5l8.25 5.25v8.25H3.75V12.75L12 7.5z"/>
+                  <circle cx="12" cy="11" r="1" fill="currentColor" opacity="0.7"/>
+                </svg>
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">

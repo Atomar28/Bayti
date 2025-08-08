@@ -136,6 +136,37 @@
   box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
 }
 
+/* Brand logo enhancements */
+.logo-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-shine::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: all 0.5s;
+  transform: translateX(-100%) translateY(-100%) rotate(45deg);
+}
+
+.logo-shine:hover::before {
+  transform: translateX(100%) translateY(100%) rotate(45deg);
+}
+
+/* Enhanced gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #1e293b 0%, #3b82f6 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
 /* Brand colors utility classes */
 .bg-brand-50 {
   background-color: var(--brand-50);
