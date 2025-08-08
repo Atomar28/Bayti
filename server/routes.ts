@@ -917,80 +917,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lead.phoneNumber === phoneNumber || (leadName && lead.name === leadName)
           );
           
+          let targetLead = existingLead;
+          
           if (!existingLead) {
-            // Create lead record - even without name if appointment was booked
+            // Create new lead record
             try {
-              const newLead = await storage.createLead({
+              targetLead = await storage.createLead({
                 name: leadName || "Unknown Caller",
                 phoneNumber: phoneNumber,
                 status: 'qualified',
                 notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
                 interestLevel: leadName ? 7 : 5 // Higher score if we got their name
               });
-            
-              // Create appointment record if time was mentioned
-              if (timeMatch || dateMatch) {
-                let scheduledTime = new Date();
-                
-                // Handle specific dates like "August 28th"
-                if (dateMatch) {
-                  const dayOfMonth = parseInt(dateMatch[1] || dateMatch[0]);
-                  if (updatedNotes.toLowerCase().includes('august')) {
-                    scheduledTime.setMonth(7); // August is month 7 (0-indexed)
-                    scheduledTime.setDate(dayOfMonth);
-                  } else if (updatedNotes.toLowerCase().includes('september')) {
-                    scheduledTime.setMonth(8); // September is month 8
-                    scheduledTime.setDate(dayOfMonth);
-                  }
-                  // If date is in the past, move to next year
-                  if (scheduledTime < new Date()) {
-                    scheduledTime.setFullYear(scheduledTime.getFullYear() + 1);
-                  }
-                } else {
-                  // Default to tomorrow if only time mentioned
-                  scheduledTime.setDate(scheduledTime.getDate() + 1);
-                }
-                
-                // Handle time
-                if (timeMatch) {
-                  if (timeMatch[0].includes(':')) {
-                    const [hour, minute] = timeMatch[1].split(':');
-                    scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
-                  } else if (updatedNotes.toLowerCase().includes('11am') || updatedNotes.toLowerCase().includes('11 am')) {
-                    scheduledTime.setHours(11, 0, 0, 0);
-                  } else {
-                    const hour = parseInt(timeMatch[1]);
-                    scheduledTime.setHours(hour, 0, 0, 0);
-                  }
-                } else {
-                  // Default to 11 AM if only date mentioned
-                  scheduledTime.setHours(11, 0, 0, 0);
-                }
-                
-                await storage.createAppointment({
-                  leadId: newLead.id,
-                  callLogId: callLog.id,
-                  title: `Callback for ${leadName || 'Caller'}`,
-                  description: `AI-scheduled callback for property inquiry - ${leadName ? leadName + ' ' : ''}requested ${scheduledTime.toDateString()} at ${scheduledTime.toLocaleTimeString()}`,
-                  scheduledTime: scheduledTime,
-                  duration: 30,
-                  status: 'scheduled',
-                  appointmentType: 'callback'
-                });
-                
-                console.log(`Created appointment for ${leadName || 'Unknown Caller'} at ${scheduledTime}`);
-              }
               
               leadCreated = true;
-              console.log(`Created qualified lead for ${leadName || 'Unknown Caller'}: ${newLead.id}`);
+              console.log(`Created qualified lead for ${leadName || 'Unknown Caller'}: ${targetLead.id}`);
               
             } catch (error) {
-              console.error('Error creating lead/appointment:', error);
+              console.error('Error creating lead:', error);
             }
           } else {
             // Lead already exists, just mark as qualified
             leadCreated = false;
-            console.log(`Lead already exists for ${leadName || 'caller'}/${phoneNumber}, skipping duplicate creation`);
+            console.log(`Lead already exists for ${leadName || 'caller'}/${phoneNumber}, using existing lead`);
+          }
+          
+          // Create appointment record if time was mentioned (for both new and existing leads)
+          if ((timeMatch || dateMatch) && targetLead) {
+            try {
+              let scheduledTime = new Date();
+              
+              // Handle specific dates like "August 28th", "September 2nd"
+              if (dateMatch) {
+                const dayOfMonth = parseInt(dateMatch[1] || dateMatch[0]);
+                if (updatedNotes.toLowerCase().includes('august')) {
+                  scheduledTime.setMonth(7); // August is month 7 (0-indexed)
+                  scheduledTime.setDate(dayOfMonth);
+                } else if (updatedNotes.toLowerCase().includes('september')) {
+                  scheduledTime.setMonth(8); // September is month 8
+                  scheduledTime.setDate(dayOfMonth);
+                }
+                // If date is in the past, move to next year
+                if (scheduledTime < new Date()) {
+                  scheduledTime.setFullYear(scheduledTime.getFullYear() + 1);
+                }
+              } else {
+                // Default to tomorrow if only time mentioned
+                scheduledTime.setDate(scheduledTime.getDate() + 1);
+              }
+              
+              // Handle time - enhanced to catch "10:00 a.m."
+              if (timeMatch) {
+                if (timeMatch[0].includes(':')) {
+                  const [hour, minute] = timeMatch[1].split(':');
+                  scheduledTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+                } else if (updatedNotes.toLowerCase().includes('11am') || updatedNotes.toLowerCase().includes('11 am')) {
+                  scheduledTime.setHours(11, 0, 0, 0);
+                } else if (updatedNotes.toLowerCase().includes('10:00 a.m.') || updatedNotes.toLowerCase().includes('10 am')) {
+                  scheduledTime.setHours(10, 0, 0, 0);
+                } else {
+                  const hour = parseInt(timeMatch[1]);
+                  scheduledTime.setHours(hour, 0, 0, 0);
+                }
+              } else {
+                // Default to 11 AM if only date mentioned
+                scheduledTime.setHours(11, 0, 0, 0);
+              }
+              
+              await storage.createAppointment({
+                leadId: targetLead.id,
+                callLogId: callLog.id,
+                title: `Callback for ${targetLead.name}`,
+                description: `AI-scheduled callback for property inquiry - ${targetLead.name} requested ${scheduledTime.toDateString()} at ${scheduledTime.toLocaleTimeString()}`,
+                scheduledTime: scheduledTime,
+                duration: 30,
+                status: 'scheduled',
+                appointmentType: 'callback'
+              });
+              
+              console.log(`Created NEW appointment for ${targetLead.name} at ${scheduledTime}`);
+            } catch (error) {
+              console.error('Error creating appointment:', error);
+            }
           }
         }
         
