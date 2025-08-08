@@ -73,22 +73,26 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      <div className="absolute inset-0 gradient-overlay pointer-events-none"></div>
+      <div className="relative z-10 px-6 sm:px-8 lg:px-12 py-10 min-h-full">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-12">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Welcome back, Agent John</h1>
-              <p className="mt-1 text-lg text-gray-600">Here's your call center overview for today</p>
+            <div className="space-y-3">
+              <h1 className="text-5xl font-bold text-gray-900 tracking-tight">Welcome back, Agent John</h1>
+              <p className="text-xl text-gray-600 max-w-2xl">Here's your call center overview for today - track your performance and manage leads efficiently</p>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200" onClick={() => {
-                // Navigate to settings tab for quick setup
-                const settingsTab = document.querySelector('[value="settings"]') as HTMLElement;
-                if (settingsTab) settingsTab.click();
-              }}>
-                <Settings className="w-4 h-4 mr-2" />
+              <Button 
+                variant="outline" 
+                className="px-8 py-4 text-lg rounded-xl border-2 border-gray-300 hover:bg-white hover:shadow-beautiful transition-all duration-300 hover:scale-105" 
+                onClick={() => {
+                  const settingsTab = document.querySelector('[value="settings"]') as HTMLElement;
+                  if (settingsTab) settingsTab.click();
+                }}
+              >
+                <Settings className="w-5 h-5 mr-3" />
                 Quick Setup
               </Button>
             </div>
@@ -96,44 +100,44 @@ export default function Dashboard() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-6 mb-12">
           <TestCallDialog>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
-              <Phone className="w-4 h-4 mr-2" />
-              Start Call
+            <Button className="btn-premium text-white px-10 py-5 text-xl rounded-2xl shadow-beautiful-lg hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <Phone className="w-6 h-6 mr-3" />
+              Start New Call
             </Button>
           </TestCallDialog>
         </div>
 
         {/* Main Tabs Navigation */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
-              Overview
+        <Tabs defaultValue="overview" className="space-y-8">
+          <TabsList className="glass-card p-2 grid w-full grid-cols-5 lg:w-auto lg:inline-grid rounded-2xl shadow-beautiful">
+            <TabsTrigger value="overview" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
+              <BarChart3 className="w-5 h-5" />
+              <span className="font-medium">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="appointments" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Appointments
+            <TabsTrigger value="appointments" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
+              <Calendar className="w-5 h-5" />
+              <span className="font-medium">Appointments</span>
             </TabsTrigger>
-            <TabsTrigger value="scripts" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Scripts
+            <TabsTrigger value="scripts" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
+              <FileText className="w-5 h-5" />
+              <span className="font-medium">Scripts</span>
             </TabsTrigger>
-            <TabsTrigger value="calls" className="flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              Call Logs
+            <TabsTrigger value="calls" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
+              <Phone className="w-5 h-5" />
+              <span className="font-medium">Call Logs</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
+            <TabsTrigger value="settings" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
+              <Settings className="w-5 h-5" />
+              <span className="font-medium">Settings</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-8">
             {/* Enhanced Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
         <StatsCard
           title={(stats as any)?.totalCallsToday > 0 ? "Total Calls Today" : "Recent Calls"}
           value={(stats as any)?.totalCallsToday || 0}
@@ -164,59 +168,62 @@ export default function Dashboard() {
         />
         </div>
 
-        {/* Quick Actions Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-            <CardContent className="p-6">
+        {/* Quick Actions Row - Enhanced */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <Card className="glass-card border-0 shadow-beautiful-lg overflow-hidden relative group hover:scale-105 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 opacity-90"></div>
+            <CardContent className="relative z-10 p-8 text-white">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">AI Agent Status</h3>
-                  <p className="text-blue-100">All systems operational</p>
-                  <div className="flex items-center mt-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    <span className="text-sm">Online & Ready</span>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold">AI Agent Status</h3>
+                  <p className="text-blue-100 text-lg">All systems operational</p>
+                  <div className="flex items-center mt-4">
+                    <div className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></div>
+                    <span className="text-base font-medium">Online & Ready</span>
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Phone className="w-6 h-6" />
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Phone className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
-            <CardContent className="p-6">
+          <Card className="glass-card border-0 shadow-beautiful-lg overflow-hidden relative group hover:scale-105 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-90"></div>
+            <CardContent className="relative z-10 p-8 text-white">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Active Campaigns</h3>
-                  <p className="text-emerald-100">3 campaigns running</p>
-                  <div className="flex items-center mt-3">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Real Estate Focus</span>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold">Active Campaigns</h3>
+                  <p className="text-emerald-100 text-lg">3 campaigns running</p>
+                  <div className="flex items-center mt-4">
+                    <Calendar className="w-5 h-5 mr-3" />
+                    <span className="text-base font-medium">Real Estate Focus</span>
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6" />
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <Users className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white">
-            <CardContent className="p-6">
+          <Card className="glass-card border-0 shadow-beautiful-lg overflow-hidden relative group hover:scale-105 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-90"></div>
+            <CardContent className="relative z-10 p-8 text-white">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Today's Goal</h3>
-                  <p className="text-amber-100">{(stats as any)?.qualifiedLeads || 0} / 25 appointments booked</p>
-                  <div className="flex items-center mt-3">
-                    <div className="flex-1 bg-white/20 rounded-full h-2 mr-2">
-                      <div className="bg-white h-2 rounded-full" style={{width: `${Math.min(((stats as any)?.qualifiedLeads || 0) / 25 * 100, 100)}%`}}></div>
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-bold">Today's Goal</h3>
+                  <p className="text-amber-100 text-lg">{(stats as any)?.qualifiedLeads || 0} / 25 appointments booked</p>
+                  <div className="flex items-center mt-4 space-x-4">
+                    <div className="flex-1 bg-white/20 rounded-full h-3">
+                      <div className="bg-white h-3 rounded-full transition-all duration-500" style={{width: `${Math.min(((stats as any)?.qualifiedLeads || 0) / 25 * 100, 100)}%`}}></div>
                     </div>
-                    <span className="text-sm">{Math.min(Math.round(((stats as any)?.qualifiedLeads || 0) / 25 * 100), 100)}%</span>
+                    <span className="text-base font-bold">{Math.min(Math.round(((stats as any)?.qualifiedLeads || 0) / 25 * 100), 100)}%</span>
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6" />
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                  <TrendingUp className="w-8 h-8" />
                 </div>
               </div>
             </CardContent>
@@ -224,19 +231,21 @@ export default function Dashboard() {
         </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* AI Call Logs Section */}
-        <AICallLogs />
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
+        <div className="space-y-6">
+          <AICallLogs />
+        </div>
+        <Card className="glass-card border-0 shadow-beautiful-lg">
+          <CardHeader className="pb-6">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold text-gray-900">Recent Calls</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                View all <ChevronRight className="w-4 h-4 ml-1" />
+              <CardTitle className="text-2xl font-bold text-gray-900">Recent Activity</CardTitle>
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 px-4 py-2 rounded-xl transition-all duration-200">
+                View all <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {callsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (

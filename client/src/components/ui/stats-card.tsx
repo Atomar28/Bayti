@@ -11,19 +11,20 @@ interface StatsCardProps {
 
 export default function StatsCard({ title, value, icon: Icon, iconColor, iconBgColor }: StatsCardProps) {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className={`w-8 h-8 ${iconBgColor} rounded-lg flex items-center justify-center`}>
-              <Icon className={`${iconColor} w-4 h-4`} />
+    <Card className="glass-card border-0 shadow-beautiful-lg hover:shadow-beautiful-lg hover:scale-105 transition-all duration-300 group">
+      <CardContent className="p-8">
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <div className={`w-14 h-14 ${iconBgColor} rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+              <Icon className={`${iconColor} w-7 h-7`} />
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-gray-900 tracking-tight">{value}</div>
             </div>
           </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
-              <dd className="text-2xl font-semibold text-gray-900">{value}</dd>
-            </dl>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+            <div className="mt-2 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
         </div>
       </CardContent>

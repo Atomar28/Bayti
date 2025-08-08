@@ -105,9 +105,9 @@ export default function Header({ currentPage }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <header className="glass-card bg-white/95 backdrop-blur-lg shadow-beautiful border-b border-white/20 sticky top-0 z-50">
+      <div className="px-6 sm:px-8 lg:px-12">
+        <div className="flex justify-between h-20">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -117,20 +117,20 @@ export default function Header({ currentPage }: HeaderProps) {
               <Menu className="w-4 h-4" />
             </Button>
             
-            {/* Bayti Logo from Marketing Landing Page */}
+            {/* Bayti Logo - Enhanced */}
             <div className="flex items-center ml-2 md:ml-0">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4 shadow-beautiful transition-transform duration-300 hover:scale-110">
+                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.41l7 7V20h-2v-6h-6v6H9v-8.59l3-3z"/>
                 </svg>
               </div>
-              <div className="hidden md:block">
-                <h1 className="text-2xl font-bold text-gray-900">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
-                <p className="text-xs text-gray-500 -mt-1 font-medium">AI Calling Platform</p>
+              <div className="hidden md:block space-y-1">
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">B<span className="text-blue-600 font-extrabold">A</span>yt<span className="text-blue-600 font-extrabold">I</span></h1>
+                <p className="text-sm text-gray-500 font-medium">AI Calling Platform</p>
               </div>
             </div>
             
-            <h2 className="ml-4 text-lg font-semibold text-gray-900 md:hidden">
+            <h2 className="ml-4 text-xl font-bold text-gray-900 md:hidden">
               {currentPage}
             </h2>
           </div>
@@ -210,25 +210,25 @@ export default function Header({ currentPage }: HeaderProps) {
               </PopoverContent>
             </Popover>
 
-            {/* User Menu */}
-            <div className="flex items-center space-x-3 pl-4 border-l border-gray-200">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
+            {/* User Menu - Enhanced */}
+            <div className="flex items-center space-x-4 pl-6 border-l border-gray-200/50">
+              <div className="flex items-center space-x-4">
+                <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-beautiful">
+                  <User className="w-5 h-5 text-white" />
                 </div>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                  <p className="text-xs text-gray-500">{user?.role || 'Agent Manager'}</p>
+                <div className="hidden md:block space-y-1">
+                  <p className="text-base font-semibold text-gray-900">{user?.name || 'Demo User'}</p>
+                  <p className="text-sm text-gray-500">{user?.role || 'Agent Manager'}</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
                 title="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5" />
               </Button>
             </div>
           </div>
