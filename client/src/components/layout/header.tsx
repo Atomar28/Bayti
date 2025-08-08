@@ -107,7 +107,7 @@ export default function Header({ currentPage }: HeaderProps) {
   return (
     <header className="glass-card bg-white/95 backdrop-blur-lg shadow-beautiful border-b border-white/20 mt-20">
       <div className="px-6 sm:px-8 lg:px-12">
-        <div className="flex justify-between h-18">
+        <div className="flex justify-between h-20 items-center">
           <div className="flex items-center">
             <Button
               variant="ghost"
