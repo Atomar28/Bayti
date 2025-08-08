@@ -83,12 +83,10 @@ export default function Dashboard() {
               <p className="mt-1 text-lg text-gray-600">Here's your call center overview for today</p>
             </div>
             <div className="flex items-center space-x-4">
-              <TestCallDialog>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Start Call
-                </Button>
-              </TestCallDialog>
+              <Button variant="outline" className="px-6 py-3 rounded-lg border-gray-300 hover:bg-gray-50 transition-all duration-200">
+                <Settings className="w-4 h-4 mr-2" />
+                Quick Setup
+              </Button>
             </div>
           </div>
         </div>
