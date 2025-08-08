@@ -19,7 +19,7 @@ export default function Settings() {
     agentName: "Bayti Assistant",
     voiceType: "Professional Female",
     elevenLabsVoiceId: "EXAVITQu4vr4xnSDxMaL",
-    elevenLabsModel: "eleven_monolingual_v1",
+    elevenLabsModelId: "eleven_flash_v2_5",
     voiceSettings: {
       stability: 0.5,
       similarityBoost: 0.8,
@@ -87,7 +87,8 @@ export default function Settings() {
         },
         body: JSON.stringify({
           voiceId: agentSettings.elevenLabsVoiceId,
-          text: "Hello! This is a test of the AI voice configuration. How does this sound for your calling agent?"
+          text: "Hi",
+          modelId: agentSettings.elevenLabsModelId || "eleven_flash_v2_5"
         })
       }).then(res => res.json());
     },
@@ -321,8 +322,8 @@ export default function Settings() {
               <div className="space-y-3">
                 <Label className="text-base font-semibold text-gray-700">AI Voice Model</Label>
                 <Select
-                  value={agentSettings.elevenLabsModel || ""}
-                  onValueChange={(value) => setAgentSettings(prev => ({ ...prev, elevenLabsModel: value }))}
+                  value={agentSettings.elevenLabsModelId || ""}
+                  onValueChange={(value) => setAgentSettings(prev => ({ ...prev, elevenLabsModelId: value }))}
                   disabled={modelsLoading}
                 >
                   <SelectTrigger className="h-12 voice-selection-trigger">
@@ -527,159 +528,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Call Scripts */}
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Call Scripts</CardTitle>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Script
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {scriptsLoading ? (
-              <div className="space-y-4">
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className="border border-gray-200 rounded-lg p-4 animate-pulse">
-                    <div className="h-32 bg-gray-200 rounded"></div>
-                  </div>
-                ))}
-              </div>
-            ) : Array.isArray(scripts) && scripts.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No call scripts found</p>
-            ) : (
-              <div className="space-y-4">
-                {Array.isArray(scripts) && scripts.map((script: CallScript) => (
-                  <div key={script.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">{script.name}</h4>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteScriptMutation.mutate(script.id)}
-                          disabled={deleteScriptMutation.isPending}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{script.description}</p>
-                    <div className="bg-gray-50 rounded p-3 text-sm text-gray-700">
-                      {script.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Target Audience Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Target Audience Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label>Industry Focus</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select industries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="technology">Technology</SelectItem>
-                    <SelectItem value="real-estate">Real Estate</SelectItem>
-                    <SelectItem value="healthcare">Healthcare</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="ecommerce">E-commerce</SelectItem>
-                    <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Company Size</Label>
-                <div className="space-y-2 mt-2">
-                  {[
-                    "Startup (1-10 employees)",
-                    "Small Business (11-50 employees)",
-                    "Medium Business (51-200 employees)",
-                    "Enterprise (200+ employees)",
-                  ].map((size) => (
-                    <div key={size} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={size}
-                        checked={agentSettings.companySizes?.includes(size) || false}
-                        onCheckedChange={(checked) =>
-                          handleCompanySizeChange(size, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={size} className="text-sm">
-                        {size}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Budget Range</Label>
-                <div className="flex space-x-2 mt-2">
-                  <Input
-                    type="number"
-                    placeholder="Min"
-                    value={agentSettings.minBudget || ""}
-                    onChange={(e) =>
-                      setAgentSettings({ ...agentSettings, minBudget: parseInt(e.target.value) })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Max"
-                    value={agentSettings.maxBudget || ""}
-                    onChange={(e) =>
-                      setAgentSettings({ ...agentSettings, maxBudget: parseInt(e.target.value) })
-                    }
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="region">Geographic Region</Label>
-                <Select
-                  value={agentSettings.region || ""}
-                  onValueChange={(value) =>
-                    setAgentSettings({ ...agentSettings, region: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="North America">North America</SelectItem>
-                    <SelectItem value="Europe">Europe</SelectItem>
-                    <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
-                    <SelectItem value="Global">Global</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="mt-6">
-              <Button
-                onClick={handleSaveSettings}
-                disabled={saveSettingsMutation.isPending}
-                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {saveSettingsMutation.isPending ? "Saving..." : "Save All Settings"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
       </div>
     </div>

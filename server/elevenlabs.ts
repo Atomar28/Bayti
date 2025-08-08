@@ -194,7 +194,7 @@ class ElevenLabsService {
     }
   }
 
-  async testVoice(voiceId: string, text: string = "Hello, this is a test of the AI voice quality for your calling agent."): Promise<string> {
+  async testVoice(voiceId: string, text: string = "Test.", modelId: string = "eleven_flash_v2_5"): Promise<string> {
     if (!this.apiKey) {
       throw new Error("ElevenLabs API key required for voice testing");
     }
@@ -209,7 +209,7 @@ class ElevenLabsService {
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_flash_v2_5", // Use the fastest model for preview
+          model_id: modelId,
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.8,

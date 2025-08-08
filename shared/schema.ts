@@ -64,7 +64,7 @@ export const agentSettings = pgTable("agent_settings", {
   agentName: text("agent_name").default("Bayti Assistant"),
   voiceType: text("voice_type").default("Professional Female"),
   elevenLabsVoiceId: text("eleven_labs_voice_id").default("EXAVITQu4vr4xnSDxMaL"), // Default voice ID
-  elevenLabsModel: text("eleven_labs_model").default("eleven_monolingual_v1"),
+  elevenLabsModelId: text("eleven_labs_model_id").default("eleven_flash_v2_5"),
   voiceSettings: jsonb("voice_settings").$type<{stability: number, similarityBoost: number, style?: number, speakerBoost?: boolean}>(),
   speakingSpeed: text("speaking_speed").default("1.0"),
   callTimeout: integer("call_timeout").default(30),

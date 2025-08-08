@@ -469,12 +469,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/elevenlabs/test-voice", async (req, res) => {
     try {
-      const { voiceId, text } = req.body;
+      const { voiceId, text, modelId } = req.body;
       if (!voiceId) {
         return res.status(400).json({ message: "Voice ID required" });
       }
       
-      const audioBase64 = await elevenLabsService.testVoice(voiceId, text);
+      // Use very short text to minimize credit usage
+      const testText = text || "Hi";
+      const audioBase64 = await elevenLabsService.testVoice(voiceId, testText, modelId);
       res.json({ audioUrl: audioBase64 });
     } catch (error) {
       console.error("Error testing voice:", error);
