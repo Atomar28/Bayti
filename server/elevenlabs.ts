@@ -90,29 +90,77 @@ class ElevenLabsService {
   }
 
   async getModels(): Promise<ElevenLabsModel[]> {
-    if (!this.apiKey) {
-      return this.getDefaultModels();
-    }
-
-    try {
-      const response = await fetch(`${this.baseUrl}/models`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "xi-api-key": this.apiKey
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+    // Return the latest 2024 ElevenLabs models with pricing info
+    return [
+      {
+        model_id: "eleven_flash_v2_5",
+        name: "Flash v2.5 (Ultra Fast)",
+        description: "Ultra-low latency (~75ms), 32 languages, 50% cheaper - Perfect for real-time calls",
+        can_be_finetuned: false,
+        can_do_text_to_speech: true,
+        can_do_voice_conversion: false,
+        can_use_style: true,
+        can_use_speaker_boost: true,
+        serves_pro_voices: true,
+        token_cost_factor: 0.5,
+        requires_alpha_access: false,
+        max_characters_request_free_user: 2500,
+        max_characters_request_subscribed_user: 40000,
+        maximum_text_length_per_request: 40000,
+        languages: [{ language_id: "en", name: "English" }, { language_id: "es", name: "Spanish" }]
+      },
+      {
+        model_id: "eleven_turbo_v2_5", 
+        name: "Turbo v2.5 (Balanced)",
+        description: "Balanced quality and speed, multilingual, 50% cheaper - Great for most applications",
+        can_be_finetuned: false,
+        can_do_text_to_speech: true,
+        can_do_voice_conversion: false,
+        can_use_style: true,
+        can_use_speaker_boost: true,
+        serves_pro_voices: true,
+        token_cost_factor: 0.5,
+        requires_alpha_access: false,
+        max_characters_request_free_user: 2500,
+        max_characters_request_subscribed_user: 10000,
+        maximum_text_length_per_request: 10000,
+        languages: [{ language_id: "en", name: "English" }, { language_id: "es", name: "Spanish" }]
+      },
+      {
+        model_id: "eleven_multilingual_v2",
+        name: "Multilingual v2 (Premium)",
+        description: "Highest quality, 29 languages, premium model - Best for professional content",
+        can_be_finetuned: true,
+        can_do_text_to_speech: true,
+        can_do_voice_conversion: true,
+        can_use_style: true,
+        can_use_speaker_boost: true,
+        serves_pro_voices: true,
+        token_cost_factor: 1.0,
+        requires_alpha_access: false,
+        max_characters_request_free_user: 2500,
+        max_characters_request_subscribed_user: 10000,
+        maximum_text_length_per_request: 10000,
+        languages: [{ language_id: "en", name: "English" }, { language_id: "es", name: "Spanish" }, { language_id: "fr", name: "French" }]
+      },
+      {
+        model_id: "eleven_monolingual_v1",
+        name: "English v1 (Classic)",
+        description: "Classic English model, reliable quality - Good for English-only applications",
+        can_be_finetuned: false,
+        can_do_text_to_speech: true,
+        can_do_voice_conversion: false,
+        can_use_style: false,
+        can_use_speaker_boost: true,
+        serves_pro_voices: false,
+        token_cost_factor: 1.0,
+        requires_alpha_access: false,
+        max_characters_request_free_user: 2500,
+        max_characters_request_subscribed_user: 10000,
+        maximum_text_length_per_request: 10000,
+        languages: [{ language_id: "en", name: "English" }]
       }
-
-      const data = await response.json();
-      return data.models || [];
-    } catch (error) {
-      console.error("Error fetching models from ElevenLabs:", error);
-      return this.getDefaultModels();
-    }
+    ];
   }
 
   async updateVoiceSettings(voiceId: string, settings: {stability: number, similarityBoost: number, style?: number, speakerBoost?: boolean}): Promise<void> {
@@ -146,7 +194,7 @@ class ElevenLabsService {
     }
   }
 
-  async testVoice(voiceId: string, text: string = "Hello, this is a test of the voice quality."): Promise<string> {
+  async testVoice(voiceId: string, text: string = "Hello, this is a test of the AI voice quality for your calling agent."): Promise<string> {
     if (!this.apiKey) {
       throw new Error("ElevenLabs API key required for voice testing");
     }
@@ -161,16 +209,20 @@ class ElevenLabsService {
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_monolingual_v1",
+          model_id: "eleven_flash_v2_5", // Use the fastest model for preview
           voice_settings: {
             stability: 0.5,
-            similarity_boost: 0.8
+            similarity_boost: 0.8,
+            style: 0,
+            use_speaker_boost: false
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`ElevenLabs API error: ${response.status} - ${errorText}`);
+        throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
       }
 
       // Convert to base64 for frontend playback
