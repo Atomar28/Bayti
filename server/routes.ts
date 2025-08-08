@@ -911,11 +911,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const phoneNumber = callLog.phoneNumber;
           const leadName = nameMatch ? nameMatch[1] : null;
           
-          // Check if lead already exists for this phone number to prevent duplicates
+          // TESTING MODE: Allow duplicate leads for same phone number during testing phase
+          // TODO: Re-enable duplicate prevention after testing phase is complete
           const existingLeads = await storage.getLeads();
-          const existingLead = existingLeads.leads.find(lead => 
-            lead.phoneNumber === phoneNumber || (leadName && lead.name === leadName)
-          );
+          const existingLead = null; // Temporarily disable duplicate checking for testing
+          // const existingLead = existingLeads.leads.find(lead => 
+          //   lead.phoneNumber === phoneNumber || (leadName && lead.name === leadName)
+          // );
           
           let targetLead = existingLead;
           
