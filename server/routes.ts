@@ -423,7 +423,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await elevenLabsService.updateVoiceSettings(
             validatedData.elevenLabsVoiceId,
-            validatedData.voiceSettings
+            {
+              stability: validatedData.voiceSettings.stability,
+              similarityBoost: validatedData.voiceSettings.similarityBoost,
+              style: typeof validatedData.voiceSettings.style === 'number' ? validatedData.voiceSettings.style : 0,
+              speakerBoost: typeof validatedData.voiceSettings.speakerBoost === 'boolean' ? validatedData.voiceSettings.speakerBoost : false
+            }
           );
         } catch (voiceError) {
           console.warn("Failed to update ElevenLabs voice settings:", voiceError);
@@ -819,7 +824,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   name: leadName,
                   phoneNumber: phoneNumber,
                   status: 'qualified',
-                  source: 'AI Call',
                   notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
                   qualificationScore: 85
                 });
@@ -1029,7 +1033,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertAppointmentSchema.parse(req.body);
       
       // Check for conflicts (basic implementation)
-      const existingAppointments = await storage.getAppointments(validatedData.agentId);
+      const existingAppointments = await storage.getAppointments(validatedData.agentId || "default-agent");
       const proposedTime = new Date(validatedData.scheduledTime!);
       const conflictingAppointment = existingAppointments.find(apt => {
         const existingTime = new Date(apt.scheduledTime);
@@ -1103,7 +1107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating project script:", error);
       console.error("Request body:", req.body);
-      console.error("Script data:", scriptData);
+      console.error("Script data:", req.body);
       if (error instanceof z.ZodError) {
         console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ 
