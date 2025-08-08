@@ -131,9 +131,9 @@ export default function Header({ currentPage }: HeaderProps) {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="p-4 text-gray-400 hover:text-gray-500 relative rounded-full hover:bg-gray-100/80 transition-all duration-200"
+                  className="w-14 h-14 text-gray-400 hover:text-gray-500 relative rounded-full hover:bg-gray-100/80 transition-all duration-200 flex items-center justify-center"
                 >
-                  <Bell className="w-8 h-8" />
+                  <Bell className="w-7 h-7" />
                   {notifications.length > 0 && (
                     <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium">
                       {notifications.length}
