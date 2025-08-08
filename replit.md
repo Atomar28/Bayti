@@ -25,6 +25,8 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **Unified Layout Design (2025-08-08)**: Completely redesigned the dashboard layout architecture with unified logo system spanning both sidebar and header areas for fluid, cohesive design. Implemented visual connection effects where selected sidebar pages appear to "open" from the sidebar section through animated connection lines and pulse effects. Created single premium BaytiAI logo positioned at top-left covering both sidebar and header zones, eliminating duplicate branding. Enhanced with slide-in animations, gradient connection lines, and smooth transitions that reinforce the visual relationship between navigation and content areas.
 
+**Voice Configuration System Fix (2025-08-08)**: Resolved critical database constraint issues preventing voice settings from persisting properly. Fixed ElevenLabs API integration errors and corrected parameter order in voice synthesis methods. Enhanced voice configuration system to properly save and load user-selected voices (like George British Male) with custom voice settings (stability, similarity boost, style, speaker boost). System now correctly applies saved voice settings to live calls, replacing default female voice with user's selected voice preference. Added comprehensive logging to track voice configuration changes and ensure settings are properly synchronized between dashboard and AI calling system.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.

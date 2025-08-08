@@ -751,7 +751,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Generate audio using configured voice settings
-        const audioData = await elevenLabsService.testVoice(greeting, voiceId, modelId);
+        console.log(`Using voice ${voiceId} with model ${modelId} for greeting audio`);
+        const audioData = await elevenLabsService.testVoice(greeting, voiceId, modelId, voiceSettings);
         if (audioData) {
           // Store audio temporarily and create accessible URL
           greetingAudioUrl = audioData; // This should be the audio URL from ElevenLabs
