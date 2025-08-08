@@ -494,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use very short text to minimize credit usage
       const testText = text || "Hi";
-      const audioBase64 = await elevenLabsService.testVoice(voiceId, testText, modelId);
+      const audioBase64 = await elevenLabsService.testVoice(testText, voiceId, modelId);
       res.json({ audioUrl: audioBase64 });
     } catch (error) {
       console.error("Error testing voice:", error);
@@ -844,7 +844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Generate audio using configured voice settings
-        const audioData = await elevenLabsService.testVoice(aiResponse, voiceId, modelId);
+        const audioData = await elevenLabsService.testVoice(aiResponse, voiceId, modelId, voiceSettings);
         if (audioData) {
           responseAudioUrl = audioData; // This should be the audio URL from ElevenLabs
         }

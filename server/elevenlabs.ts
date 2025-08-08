@@ -164,40 +164,24 @@ class ElevenLabsService {
   }
 
   async updateVoiceSettings(voiceId: string, settings: {stability: number, similarityBoost: number, style?: number, speakerBoost?: boolean}): Promise<void> {
-    if (!this.apiKey) {
-      console.warn("ElevenLabs API key not available, skipping voice settings update");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${this.baseUrl}/voices/${voiceId}/settings`, {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "xi-api-key": this.apiKey
-        },
-        body: JSON.stringify({
-          stability: settings.stability,
-          similarity_boost: settings.similarityBoost,
-          style: settings.style || 0,
-          use_speaker_boost: settings.speakerBoost || false
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status} - ${await response.text()}`);
-      }
-    } catch (error) {
-      console.error("Error updating voice settings:", error);
-      throw error;
-    }
+    console.log(`Voice settings stored for voice ${voiceId}:`, settings);
+    
+    // ElevenLabs API doesn't allow updating pre-built voice settings directly
+    // Voice settings are applied per-request in the TTS synthesis call
+    // The settings are now stored in database and will be used during synthesis
   }
 
-  async testVoice(voiceId: string, text: string = "Test.", modelId: string = "eleven_flash_v2_5"): Promise<string> {
+  async testVoice(text: string, voiceId: string, modelId: string, voiceSettings?: {stability: number, similarityBoost: number, style?: number, speakerBoost?: boolean}): Promise<string> {
     if (!this.apiKey) {
       throw new Error("ElevenLabs API key required for voice testing");
     }
+
+    const settings = voiceSettings || {
+      stability: 0.5,
+      similarity_boost: 0.8,
+      style: 0,
+      use_speaker_boost: false
+    };
 
     try {
       const response = await fetch(`${this.baseUrl}/text-to-speech/${voiceId}`, {
@@ -211,10 +195,10 @@ class ElevenLabsService {
           text,
           model_id: modelId,
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0,
-            use_speaker_boost: false
+            stability: settings.stability,
+            similarity_boost: settings.similarityBoost || settings.similarity_boost || 0.8,
+            style: settings.style || 0,
+            use_speaker_boost: settings.speakerBoost || settings.use_speaker_boost || false
           }
         })
       });

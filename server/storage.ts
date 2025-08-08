@@ -220,20 +220,56 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrUpdateAgentSettings(insertSettings: InsertAgentSettings): Promise<AgentSettings> {
+    console.log("Attempting to save agent settings:", { 
+      agentId: insertSettings.agentId, 
+      voiceId: insertSettings.elevenLabsVoiceId,
+      modelId: insertSettings.elevenLabsModelId,
+      voiceSettings: insertSettings.voiceSettings
+    });
+    
     const existingSettings = await this.getAgentSettings(insertSettings.agentId!);
     
     if (existingSettings) {
+      console.log("Updating existing agent settings for:", insertSettings.agentId);
+      const updateData = {
+        ...insertSettings,
+        updatedAt: new Date(),
+        // Ensure voiceSettings types are properly handled
+        voiceSettings: insertSettings.voiceSettings ? {
+          stability: Number(insertSettings.voiceSettings.stability || 0.5),
+          similarityBoost: Number(insertSettings.voiceSettings.similarityBoost || 0.8),
+          style: insertSettings.voiceSettings.style ? Number(insertSettings.voiceSettings.style) : 0,
+          speakerBoost: Boolean(insertSettings.voiceSettings.speakerBoost || false)
+        } : null
+      };
+      
       const [settings] = await db
         .update(agentSettings)
-        .set({ ...insertSettings, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(agentSettings.agentId, insertSettings.agentId!))
         .returning();
+      console.log("Successfully updated agent settings:", settings.elevenLabsVoiceId);
       return settings;
     } else {
+      console.log("Creating new agent settings for:", insertSettings.agentId);
+      const insertData = {
+        ...insertSettings,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        // Ensure voiceSettings types are properly handled
+        voiceSettings: insertSettings.voiceSettings ? {
+          stability: Number(insertSettings.voiceSettings.stability || 0.5),
+          similarityBoost: Number(insertSettings.voiceSettings.similarityBoost || 0.8),
+          style: insertSettings.voiceSettings.style ? Number(insertSettings.voiceSettings.style) : 0,
+          speakerBoost: Boolean(insertSettings.voiceSettings.speakerBoost || false)
+        } : null
+      };
+      
       const [settings] = await db
         .insert(agentSettings)
-        .values(insertSettings)
+        .values(insertData)
         .returning();
+      console.log("Successfully created agent settings:", settings.elevenLabsVoiceId);
       return settings;
     }
   }

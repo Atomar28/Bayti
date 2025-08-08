@@ -57,6 +57,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (existingSettings && typeof existingSettings === 'object') {
+      console.log("Loading settings from database:", existingSettings);
       setAgentSettings(prev => ({
         ...prev,
         ...existingSettings,
@@ -67,6 +68,7 @@ export default function Settings() {
           speakerBoost: false
         }
       }));
+      console.log("Voice loaded:", (existingSettings as any).elevenLabsVoiceId);
     }
   }, [existingSettings]);
 

@@ -60,7 +60,7 @@ export const callScripts = pgTable("call_scripts", {
 
 export const agentSettings = pgTable("agent_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  agentId: varchar("agent_id").references(() => users.id),
+  agentId: varchar("agent_id").notNull(),
   agentName: text("agent_name").default("Bayti Assistant"),
   voiceType: text("voice_type").default("Professional Female"),
   elevenLabsVoiceId: text("eleven_labs_voice_id").default("EXAVITQu4vr4xnSDxMaL"), // Default voice ID
