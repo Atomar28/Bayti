@@ -80,13 +80,16 @@ export default function Settings() {
       if (!agentSettings.elevenLabsVoiceId) {
         throw new Error("No voice selected");
       }
-      return await apiRequest("/api/elevenlabs/test-voice", {
+      return await fetch("/api/elevenlabs/test-voice", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           voiceId: agentSettings.elevenLabsVoiceId,
           text: "Hello! This is a test of the AI voice configuration. How does this sound for your calling agent?"
         })
-      });
+      }).then(res => res.json());
     },
     onSuccess: (data: any) => {
       if (data.audioUrl) {
@@ -129,13 +132,16 @@ export default function Settings() {
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<AgentSettings>) => {
-      return await apiRequest("/api/agent-settings", {
+      return await fetch("/api/agent-settings", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...settings,
           agentId: "default-agent"
         })
-      });
+      }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/agent-settings/default-agent"] });
@@ -355,7 +361,12 @@ export default function Settings() {
                     value={[agentSettings.voiceSettings?.stability || 0.5]}
                     onValueChange={([value]) => setAgentSettings(prev => ({
                       ...prev,
-                      voiceSettings: { ...prev.voiceSettings, stability: value }
+                      voiceSettings: { 
+                        stability: value,
+                        similarityBoost: prev.voiceSettings?.similarityBoost || 0.8,
+                        style: prev.voiceSettings?.style || 0,
+                        speakerBoost: prev.voiceSettings?.speakerBoost || false
+                      }
                     }))}
                     min={0}
                     max={1}
@@ -378,7 +389,12 @@ export default function Settings() {
                     value={[agentSettings.voiceSettings?.similarityBoost || 0.8]}
                     onValueChange={([value]) => setAgentSettings(prev => ({
                       ...prev,
-                      voiceSettings: { ...prev.voiceSettings, similarityBoost: value }
+                      voiceSettings: { 
+                        stability: prev.voiceSettings?.stability || 0.5,
+                        similarityBoost: value,
+                        style: prev.voiceSettings?.style || 0,
+                        speakerBoost: prev.voiceSettings?.speakerBoost || false
+                      }
                     }))}
                     min={0}
                     max={1}
@@ -402,7 +418,12 @@ export default function Settings() {
                   checked={agentSettings.voiceSettings?.speakerBoost || false}
                   onCheckedChange={(checked) => setAgentSettings(prev => ({
                     ...prev,
-                    voiceSettings: { ...prev.voiceSettings, speakerBoost: !!checked }
+                    voiceSettings: { 
+                      stability: prev.voiceSettings?.stability || 0.5,
+                      similarityBoost: prev.voiceSettings?.similarityBoost || 0.8,
+                      style: prev.voiceSettings?.style || 0,
+                      speakerBoost: !!checked
+                    }
                   }))}
                   className="w-5 h-5 voice-checkbox"
                 />
@@ -526,11 +547,11 @@ export default function Settings() {
                   </div>
                 ))}
               </div>
-            ) : scripts?.length === 0 ? (
+            ) : Array.isArray(scripts) && scripts.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No call scripts found</p>
             ) : (
               <div className="space-y-4">
-                {scripts?.map((script: CallScript) => (
+                {Array.isArray(scripts) && scripts.map((script: CallScript) => (
                   <div key={script.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-gray-900">{script.name}</h4>
@@ -630,7 +651,7 @@ export default function Settings() {
               <div>
                 <Label htmlFor="region">Geographic Region</Label>
                 <Select
-                  value={agentSettings.region}
+                  value={agentSettings.region || ""}
                   onValueChange={(value) =>
                     setAgentSettings({ ...agentSettings, region: value })
                   }
