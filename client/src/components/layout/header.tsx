@@ -107,7 +107,7 @@ export default function Header({ currentPage }: HeaderProps) {
   return (
     <header className="glass-card bg-white/95 backdrop-blur-lg shadow-beautiful border-b border-white/20 mt-20">
       <div className="px-6 sm:px-8 lg:px-12">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-18">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -125,17 +125,17 @@ export default function Header({ currentPage }: HeaderProps) {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="p-2 text-gray-400 hover:text-gray-500 relative"
+                  size="lg"
+                  className="p-3 text-gray-400 hover:text-gray-500 relative rounded-full hover:bg-gray-100/80 transition-all duration-200"
                 >
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-6 h-6" />
                   {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium">
                       {notifications.length}
                     </span>
                   )}
@@ -200,25 +200,25 @@ export default function Header({ currentPage }: HeaderProps) {
               </PopoverContent>
             </Popover>
 
-            {/* User Menu - Enhanced */}
-            <div className="flex items-center space-x-4 pl-6 border-l border-gray-200/50">
+            {/* User Menu - Enhanced and Bigger */}
+            <div className="flex items-center space-x-5 pl-8 border-l border-gray-200/50">
               <div className="flex items-center space-x-4">
-                <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-beautiful">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 rounded-full flex items-center justify-center shadow-beautiful hover:shadow-beautiful-lg transition-all duration-300 ring-2 ring-white">
+                  <User className="w-7 h-7 text-white" />
                 </div>
                 <div className="hidden md:block space-y-1">
-                  <p className="text-base font-semibold text-gray-900">{user?.name || 'Demo User'}</p>
-                  <p className="text-sm text-gray-500">{user?.role || 'Agent Manager'}</p>
+                  <p className="text-lg font-bold text-gray-900">{user?.name || 'Demo User'}</p>
+                  <p className="text-sm text-gray-500 font-medium">{user?.role || 'Agent Manager'}</p>
                 </div>
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="lg"
                 onClick={handleLogout}
                 className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-6 h-6" />
               </Button>
             </div>
           </div>
