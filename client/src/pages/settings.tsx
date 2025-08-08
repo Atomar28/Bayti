@@ -217,15 +217,15 @@ export default function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">Full Name</Label>
-                    <Input id="fullName" value="Agent John" className="mt-1" />
+                    <Input id="fullName" value="Agent John" onChange={() => {}} className="mt-1" readOnly />
                   </div>
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
-                    <Input id="email" value="hello@bayti.com" className="mt-1" />
+                    <Input id="email" value="hello@bayti.com" onChange={() => {}} className="mt-1" readOnly />
                   </div>
                   <div>
                     <Label htmlFor="role" className="text-sm font-medium text-gray-700">Role</Label>
-                    <Input id="role" value="Lead AI Agent" className="mt-1" />
+                    <Input id="role" value="Lead AI Agent" onChange={() => {}} className="mt-1" readOnly />
                   </div>
                   <div>
                     <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>

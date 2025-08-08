@@ -825,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   phoneNumber: phoneNumber,
                   status: 'qualified',
                   notes: `Qualified lead from AI conversation. Requested callback/appointment.`,
-                  qualificationScore: 85
+                  interestLevel: 5
                 });
               
                 // Create appointment record if time was mentioned
