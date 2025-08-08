@@ -14,11 +14,13 @@ export default function Leads() {
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ["/api/leads"],
+    refetchInterval: 5000, // Refetch every 5 seconds to catch new appointments
   });
 
   // Fetch appointments to show callback details on lead cards
   const { data: appointmentsData } = useQuery({
     queryKey: ["/api/v1/appointments"],
+    refetchInterval: 5000, // Refetch every 5 seconds for live updates
   });
 
   const exportMutation = useMutation({
