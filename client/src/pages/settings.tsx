@@ -429,6 +429,26 @@ export default function Settings() {
                   className="w-5 h-5 voice-checkbox"
                 />
               </div>
+
+              {/* Call Timeout */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold text-gray-700">Call Timeout</Label>
+                <Select
+                  value={agentSettings.callTimeout?.toString() || "30"}
+                  onValueChange={(value) => setAgentSettings(prev => ({ ...prev, callTimeout: parseInt(value) }))}
+                >
+                  <SelectTrigger className="h-12 voice-selection-trigger">
+                    <SelectValue placeholder="Select timeout..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 seconds</SelectItem>
+                    <SelectItem value="30">30 seconds</SelectItem>
+                    <SelectItem value="60">60 seconds</SelectItem>
+                    <SelectItem value="120">120 seconds</SelectItem>
+                    <SelectItem value="180">180 seconds</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Test Voice Button */}
@@ -457,76 +477,7 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Agent Settings */}
-        <Card className="mb-8 border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold text-gray-900">AI Agent Configuration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="agentName">Agent Name</Label>
-                <Input
-                  id="agentName"
-                  value={agentSettings.agentName || ""}
-                  onChange={(e) =>
-                    setAgentSettings({ ...agentSettings, agentName: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="voiceType">Voice Type</Label>
-                <Select
-                  value={agentSettings.voiceType || ""}
-                  onValueChange={(value) =>
-                    setAgentSettings({ ...agentSettings, voiceType: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Professional Female">Professional Female</SelectItem>
-                    <SelectItem value="Professional Male">Professional Male</SelectItem>
-                    <SelectItem value="Casual Female">Casual Female</SelectItem>
-                    <SelectItem value="Casual Male">Casual Male</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Speaking Speed</Label>
-                <div className="mt-2">
-                  <Slider
-                    value={[parseFloat(agentSettings.speakingSpeed || "1.0")]}
-                    onValueChange={(value) =>
-                      setAgentSettings({ ...agentSettings, speakingSpeed: value[0].toString() })
-                    }
-                    min={0.7}
-                    max={1.3}
-                    step={0.1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Slow</span>
-                    <span>Normal</span>
-                    <span>Fast</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="callTimeout">Call Timeout (seconds)</Label>
-                <Input
-                  id="callTimeout"
-                  type="number"
-                  value={agentSettings.callTimeout || 30}
-                  onChange={(e) =>
-                    setAgentSettings({ ...agentSettings, callTimeout: parseInt(e.target.value) })
-                  }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
 
       </div>

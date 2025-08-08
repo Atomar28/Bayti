@@ -405,10 +405,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = await storage.getAgentSettings(req.params.agentId);
       if (!settings) {
-        return res.status(404).json({ message: "Agent settings not found" });
+        // Return default settings if none exist
+        const defaultSettings = {
+          agentId: req.params.agentId,
+          agentName: "Bayti Assistant",
+          voiceType: "Professional Female", 
+          speakingSpeed: "1.0",
+          callTimeout: 30,
+          elevenLabsVoiceId: "EXAVITQu4vr4xnSDxMaL",
+          elevenLabsModelId: "eleven_flash_v2_5",
+          voiceSettings: {
+            stability: 0.5,
+            similarityBoost: 0.8,
+            style: 0,
+            speakerBoost: false
+          }
+        };
+        res.json(defaultSettings);
+        return;
       }
       res.json(settings);
     } catch (error) {
+      console.error("Error fetching agent settings:", error);
       res.status(500).json({ message: "Failed to fetch agent settings", error: error instanceof Error ? error.message : String(error) });
     }
   });
@@ -719,8 +737,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Error fetching active script, using default greeting:', error);
       }
       
-      // Return TwiML response for AI conversation
-      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+      // Generate greeting audio using ElevenLabs with saved voice settings
+      let greetingAudioUrl = '';
+      try {
+        const agentSettings = await storage.getAgentSettings("default-agent");
+        const voiceId = agentSettings?.elevenLabsVoiceId || "EXAVITQu4vr4xnSDxMaL";
+        const modelId = agentSettings?.elevenLabsModelId || "eleven_flash_v2_5";
+        const voiceSettings = agentSettings?.voiceSettings || {
+          stability: 0.5,
+          similarityBoost: 0.8,
+          style: 0,
+          speakerBoost: false
+        };
+        
+        // Generate audio using configured voice settings
+        const audioData = await elevenLabsService.testVoice(greeting, voiceId, modelId);
+        if (audioData) {
+          // Store audio temporarily and create accessible URL
+          greetingAudioUrl = audioData; // This should be the audio URL from ElevenLabs
+        }
+      } catch (voiceError) {
+        console.warn("Could not generate ElevenLabs greeting audio, falling back to Polly:", voiceError);
+      }
+      
+      // Return TwiML response for AI conversation with ElevenLabs or fallback to Polly
+      const twimlResponse = greetingAudioUrl ? 
+        `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Gather input="speech" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
+        <Play>${greetingAudioUrl}</Play>
+    </Gather>
+    <Say voice="Polly.Joanna">I didn't hear anything. Please call back when you're ready to speak. Goodbye!</Say>
+    <Hangup/>
+</Response>` :
+        `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Gather input="speech" timeout="10" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${CallSid}" method="POST">
         <Say voice="Polly.Joanna">${greeting.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')}</Say>
@@ -779,6 +829,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate intelligent AI response using GPT-4o mini
       const aiResponse = await generateAIResponse(SpeechResult, call_sid);
+
+      // Generate AI response audio using ElevenLabs with saved settings
+      let responseAudioUrl = '';
+      try {
+        const agentSettings = await storage.getAgentSettings("default-agent");
+        const voiceId = agentSettings?.elevenLabsVoiceId || "EXAVITQu4vr4xnSDxMaL";
+        const modelId = agentSettings?.elevenLabsModelId || "eleven_flash_v2_5";
+        const voiceSettings = agentSettings?.voiceSettings || {
+          stability: 0.5,
+          similarityBoost: 0.8,
+          style: 0,
+          speakerBoost: false
+        };
+        
+        // Generate audio using configured voice settings
+        const audioData = await elevenLabsService.testVoice(aiResponse, voiceId, modelId);
+        if (audioData) {
+          responseAudioUrl = audioData; // This should be the audio URL from ElevenLabs
+        }
+      } catch (voiceError) {
+        console.warn("Could not generate ElevenLabs response audio, falling back to Polly:", voiceError);
+      }
 
       // Find and update the call log
       const result = await storage.getCallLogs(1, 100);
@@ -880,17 +952,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Updated call ${call_sid}: duration=${duration}s, status=${callStatus}, lead_created=${leadCreated}`);
       }
 
-      // Return TwiML with AI response and continue conversation
-      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+      // Return TwiML with AI response and continue conversation - use ElevenLabs if available
+      const twimlResponse = responseAudioUrl ? 
+        `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Play>${responseAudioUrl}</Play>
+    <Gather input="speech" timeout="8" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+        <Say voice="Polly.Joanna"></Say>
+    </Gather>
+    <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a wonderful day!</Say>
+    <Hangup/>
+</Response>` :
+        `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="Polly.Joanna">${aiResponse.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')}</Say>
-    <Gather input="speech" timeout="8" speechTimeout="auto" partialResultCallback="/api/ai/partial-speech?call_sid=${call_sid}" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
+    <Gather input="speech" timeout="8" speechTimeout="auto" action="/api/ai/process-speech?call_sid=${call_sid}" method="POST">
         <Say voice="Polly.Joanna"></Say>
     </Gather>
     <Say voice="Polly.Joanna">Thank you for calling Bayti. Have a wonderful day!</Say>
     <Hangup/>
 </Response>`;
 
+      console.log(`Sending TwiML response for call ${call_sid}: "${aiResponse}" ${responseAudioUrl ? '(ElevenLabs audio)' : '(Polly fallback)'}`);
       res.set('Content-Type', 'application/xml');
       res.send(twimlResponse);
 
