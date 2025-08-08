@@ -22,6 +22,9 @@ const openai = new OpenAI({
 // Store conversation context for each call
 const conversationContexts = new Map<string, Array<{role: string, content: string}>>();
 
+// Audio cache for temporary audio storage
+const audioCache = new Map<string, string>();
+
 // Generate alternative appointment times using GPT-4o mini
 async function generateAlternativeAppointmentTimes(proposedTime: Date): Promise<string[]> {
   try {
@@ -753,9 +756,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate audio using configured voice settings
         console.log(`Using voice ${voiceId} with model ${modelId} for greeting audio`);
         const audioData = await elevenLabsService.testVoice(greeting, voiceId, modelId, voiceSettings);
-        if (audioData) {
-          // Store audio temporarily and create accessible URL
-          greetingAudioUrl = audioData; // This should be the audio URL from ElevenLabs
+        if (audioData && audioData.startsWith('data:audio/mpeg;base64,')) {
+          // Store audio in memory and create URL endpoint for Twilio
+          const audioId = Date.now().toString();
+          const base64Data = audioData.replace('data:audio/mpeg;base64,', '');
+          audioCache.set(audioId, base64Data);
+          greetingAudioUrl = `https://${req.get('host')}/api/audio/${audioId}`;
+          console.log(`Generated greeting audio URL: ${greetingAudioUrl}`);
         }
       } catch (voiceError) {
         console.warn("Could not generate ElevenLabs greeting audio, falling back to Polly:", voiceError);
@@ -845,9 +852,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Generate audio using configured voice settings
+        console.log(`Using voice ${voiceId} with model ${modelId} for AI response audio`);
         const audioData = await elevenLabsService.testVoice(aiResponse, voiceId, modelId, voiceSettings);
-        if (audioData) {
-          responseAudioUrl = audioData; // This should be the audio URL from ElevenLabs
+        if (audioData && audioData.startsWith('data:audio/mpeg;base64,')) {
+          // Store audio in memory and create URL endpoint for Twilio
+          const audioId = Date.now().toString();
+          const base64Data = audioData.replace('data:audio/mpeg;base64,', '');
+          audioCache.set(audioId, base64Data);
+          responseAudioUrl = `https://${req.get('host')}/api/audio/${audioId}`;
+          console.log(`Generated response audio URL: ${responseAudioUrl}`);
         }
       } catch (voiceError) {
         console.warn("Could not generate ElevenLabs response audio, falling back to Polly:", voiceError);
@@ -1286,6 +1299,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Also serve at root for marketing
   app.get("/home", (req, res) => {
     res.sendFile("landing.html", { root: "client" });
+  });
+
+  // Audio serving endpoint for Twilio
+  app.get('/api/audio/:audioId', (req, res) => {
+    const { audioId } = req.params;
+    const audioData = audioCache.get(audioId);
+    
+    if (!audioData) {
+      return res.status(404).send('Audio not found');
+    }
+    
+    // Serve the audio as MP3
+    const buffer = Buffer.from(audioData, 'base64');
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': buffer.length.toString(),
+      'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+    });
+    res.send(buffer);
+    
+    // Clean up audio after serving (optional - could keep for replay)
+    setTimeout(() => {
+      audioCache.delete(audioId);
+    }, 300000); // Delete after 5 minutes
   });
 
   const httpServer = createServer(app);
