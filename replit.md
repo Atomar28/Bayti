@@ -23,6 +23,8 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **Duplicate Prevention Fix (2025-08-07)**: Fixed critical bug where AI system was creating duplicate leads and appointments for every speech segment in a conversation. Added duplicate detection logic to prevent multiple records for the same customer contact. System now accurately tracks unique leads and appointments, ensuring dashboard shows correct metrics (4 calls, 2 appointments, 71s average duration). Enhanced appointment parsing to capture exact requested dates, times, and updated contact numbers provided during calls.
 
+**Unified Layout Design (2025-08-08)**: Completely redesigned the dashboard layout architecture with unified logo system spanning both sidebar and header areas for fluid, cohesive design. Implemented visual connection effects where selected sidebar pages appear to "open" from the sidebar section through animated connection lines and pulse effects. Created single premium BaytiAI logo positioned at top-left covering both sidebar and header zones, eliminating duplicate branding. Enhanced with slide-in animations, gradient connection lines, and smooth transitions that reinforce the visual relationship between navigation and content areas.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
