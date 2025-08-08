@@ -128,18 +128,16 @@ export default function Header({ currentPage }: HeaderProps) {
           <div className="flex items-center space-x-6">
             <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="w-14 h-14 text-gray-400 hover:text-gray-500 relative rounded-full hover:bg-gray-100/80 transition-all duration-200 flex items-center justify-center"
-                >
-                  <Bell className="w-7 h-7" />
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700 rounded-full flex items-center justify-center shadow-beautiful hover:shadow-beautiful-lg transition-all duration-300 ring-2 ring-white cursor-pointer">
+                    <Bell className="w-7 h-7 text-white" />
+                  </div>
                   {notifications.length > 0 && (
                     <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center font-medium">
                       {notifications.length}
                     </span>
                   )}
-                </Button>
+                </div>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0" align="end">
                 <div className="p-4 border-b border-gray-200">
