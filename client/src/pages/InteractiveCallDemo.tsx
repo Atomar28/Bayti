@@ -263,6 +263,15 @@ export default function InteractiveCallDemo() {
         const pcm16Array = new Uint8Array(pcm16.buffer);
         const audioBase64 = btoa(String.fromCharCode.apply(null, Array.from(pcm16Array)));
         
+        // Calculate RMS to check if audio has meaningful content
+        const rms = Math.sqrt(inputBuffer.reduce((sum, sample) => sum + sample * sample, 0) / inputBuffer.length);
+        console.log('🎵 Audio RMS level:', rms.toFixed(6), '- Sending:', rms >= 0.001);
+        
+        if (rms < 0.001) {
+          // Skip very quiet samples to avoid sending silence
+          return;
+        }
+        
         console.log('🎵 Sending audio chunk to server, size:', pcm16.length, 'samples');
         
         const audioMessage: RealtimeWSMessage = {

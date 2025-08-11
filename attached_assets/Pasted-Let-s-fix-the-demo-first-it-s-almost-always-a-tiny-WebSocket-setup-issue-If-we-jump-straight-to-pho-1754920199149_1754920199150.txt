@@ -1,0 +1,72 @@
+Let’s fix the demo first—it’s almost always a tiny WebSocket/setup issue. If we jump straight to phone calls, we’ll still need sockets working (Twilio/Daily both stream over WS). Here’s a fast checklist + one tiny echo test to confirm the pipe.
+
+Quick checks (90% of failures)
+	1.	Open the app over HTTPS in a new tab
+Click the “Open in new tab” button and make sure the URL is https://<your-repl>.repl.co (mic APIs + WSS need https).
+	2.	Secrets set correctly
+	•	MODE=interactive
+	•	DRY_RUN=true (for now)
+	•	PUBLIC_BASE_URL=https://<your-repl>.repl.co
+	3.	WS URL
+In the client, you should build wss://<your-repl>.repl.co/ws/realtime (not ws://, not localhost).
+	4.	Server uses the same HTTP server for WS upgrade
+If you did app.listen(...) you must attach WS to the returned server (not just Express). Otherwise the upgrade never fires.
+	5.	Path matches
+Client connects to /ws/realtime and the server’s upgrade handler listens on exactly that path.
+	6.	Browser devtools
+Open DevTools → Network → WS. Try Connect. You should see 101 Switching Protocols. If it shows (pending) or error, copy the error here.
+	7.	Server logs
+Add a log on upgrade: console.log('WS upgrade', req.url) and on connect: console.log('WS open'). If you don’t see them, the upgrade isn’t wired.
+	8.	Mic permission
+The page should prompt for mic. If not, your getUserMedia isn’t running or the page isn’t served over https.
+
+One-minute echo test (proves WS wiring)
+
+Add this tiny echo alongside your realtime WS so we can isolate the problem:
+
+// in your server entry where you create the HTTP server:
+import { WebSocketServer } from 'ws';
+import { parse } from 'url';
+
+const wssEcho = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  const { pathname } = parse(req.url || '');
+  if (pathname === '/ws/echo') {
+    wssEcho.handleUpgrade(req, socket, head, (ws) => {
+      ws.send(JSON.stringify({ type: 'event', data: 'echo-connected' }));
+      ws.on('message', (m) => ws.send(m)); // echo back
+    });
+  }
+});
+
+Then from the browser console run:
+
+const ws = new WebSocket('wss://<your-repl>.repl.co/ws/echo');
+ws.onmessage = (e)=>console.log('msg', e.data);
+ws.onopen = ()=>ws.send(JSON.stringify({hello:'world'}));
+
+You should see it echo. If echo works but /ws/realtime doesn’t, the issue is in the orchestrator route; if echo fails, it’s URL/https/upgrade wiring.
+
+Likeliest fix (common in Replit/Vite setups)
+	•	Ensure you’re not starting multiple servers. Typical pattern:
+
+const app = express();
+const server = http.createServer(app);
+// attach your realtime init here, using `server.on('upgrade', ...)`
+server.listen(process.env.PORT || 3000);
+
+
+	•	In the client, don’t use localhost or relative ws://. Build it from PUBLIC_BASE_URL and replace https → wss.
+
+⸻
+
+If you’d still prefer to go straight to on-call testing, we can. The simplest path is Twilio Media Streams (no SIP yet):
+	•	Buy/verify a Twilio number → set voice webhook to your endpoint returning TwiML that starts a <Stream> to wss://<your-repl>.repl.co/ws/twilio.
+	•	Handle the Twilio WS frames (base64 μ-law 8k) → decode → feed to STT; send TTS back via <Say> or stream RTP (for first cut, keep it simple).
+
+But note: that’s also WebSockets under the hood—so we still need the WS bit working.
+
+Want me to:
+	•	read your current server entry file and show exactly where to attach the WS upgrade, or
+	•	generate the Twilio Media Streams endpoint + TwiML so you can place a real call next?

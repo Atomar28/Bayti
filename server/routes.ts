@@ -1487,15 +1487,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Setup WebSocket server for realtime communication
+  // Setup WebSocket servers for realtime communication
   const { WebSocketServer } = await import("ws");
+  const { parse } = await import("url");
+  
+  // Echo WebSocket for testing
+  const wssEcho = new WebSocketServer({ noServer: true });
+  
+  // Realtime WebSocket
   const wss = new WebSocketServer({ 
     server: httpServer, 
     path: '/ws/realtime' 
   });
+
+  // Handle WebSocket upgrade manually for multiple paths
+  httpServer.on('upgrade', (req, socket, head) => {
+    const { pathname } = parse(req.url || '');
+    console.log('🔧 WS upgrade requested for:', pathname);
+    
+    if (pathname === '/ws/echo') {
+      wssEcho.handleUpgrade(req, socket, head, (ws) => {
+        console.log('🔄 Echo WebSocket connected');
+        ws.send(JSON.stringify({ type: 'event', data: 'echo-connected' }));
+        ws.on('message', (msg) => {
+          console.log('🔄 Echo received:', msg.toString());
+          ws.send(msg); // Echo back
+        });
+      });
+    } else if (pathname === '/ws/realtime') {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        console.log('🚀 Realtime WebSocket connected');
+        handleRealtimeConnection(ws);
+      });
+    }
+  });
   
-  // Enhanced realtime WebSocket handler with orchestrator integration
-  wss.on('connection', (ws, req) => {
+  // Realtime connection handler function
+  function handleRealtimeConnection(ws: any) {
     console.log('New realtime WebSocket connection');
     let orchestrator: RealtimeOrchestrator | null = null;
     
@@ -1617,7 +1645,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: Date.now()
       }
     }));
-  });
+  }
+
+  // IMPORTANT: Remove the duplicate connection handler since we now use manual upgrade
+  // wss.on('connection', ...); - This will be handled by handleRealtimeConnection()
 
   return httpServer;
 }
