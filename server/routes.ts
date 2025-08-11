@@ -1660,6 +1660,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const audioData = Buffer.from(message.data.audioData, 'base64');
           console.log('🎵 Processing audio chunk, size:', audioData.length, 'bytes');
           await orchestrator.processAudioChunk(audioData, Date.now());
+        } else if (message.type === 'test_conversation' && orchestrator) {
+          // Test the AI conversation pipeline
+          console.log('🧪 Testing AI conversation pipeline...');
+          
+          // Simulate a final transcript to trigger LLM response
+          try {
+            // Directly call handleFinalTranscript with test text
+            const testText = message.data?.text || "Hello, I'm testing the AI system. Can you hear me?";
+            const timestamp = Date.now();
+            
+            // Emit the events that would normally come from Deepgram
+            ws.send(JSON.stringify({
+              type: 'stt_partial',
+              data: { text: testText, timestamp: timestamp }
+            }));
+            
+            setTimeout(() => {
+              ws.send(JSON.stringify({
+                type: 'stt_final', 
+                data: { text: testText, timestamp: timestamp }
+              }));
+              
+              // Manually trigger the final transcript processing
+              if (orchestrator) {
+                orchestrator.emit('stt:final', testText, timestamp);
+              }
+            }, 100);
+            
+            console.log('🧪 Test conversation triggered with:', testText);
+          } catch (error) {
+            console.error('❌ Test conversation failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            ws.send(JSON.stringify({
+              type: 'error',
+              data: { 
+                message: 'Test conversation failed: ' + errorMessage, 
+                code: 'TEST_ERROR',
+                timestamp: Date.now()
+              }
+            }));
+          }
         }
       } catch (error) {
         console.error('Error processing realtime message:', error);

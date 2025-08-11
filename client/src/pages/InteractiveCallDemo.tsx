@@ -360,6 +360,22 @@ export default function InteractiveCallDemo() {
     }
   }, [stopAudioPlayback]);
 
+  // Test AI conversation without microphone
+  const testAIConversation = useCallback((testText?: string) => {
+    if (!wsRef.current || !isConnected) {
+      console.error('❌ Not connected to server');
+      return;
+    }
+    
+    const message = testText || "Hello, I'm testing the AI system. Can you respond?";
+    console.log('🧪 Testing AI conversation with:', message);
+    
+    wsRef.current.send({
+      type: 'test_conversation',
+      data: { text: message, timestamp: Date.now() }
+    });
+  }, [isConnected]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -453,6 +469,16 @@ export default function InteractiveCallDemo() {
                     Stop Recording
                   </Button>
                 )}
+                
+                {/* Test AI Conversation Button */}
+                <Button 
+                  onClick={() => testAIConversation("Hello, I'm testing the AI system. Can you hear me?")}
+                  disabled={!isConnected}
+                  variant="outline"
+                  className="bg-blue-50 hover:bg-blue-100 border-blue-300"
+                >
+                  🧪 Test AI Chat
+                </Button>
               </div>
             </div>
 
