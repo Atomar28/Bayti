@@ -1,0 +1,79 @@
+You are an expert Node/TypeScript engineer. Add a minimal "Interactive (realtime)" mode to this project without breaking the existing app.
+
+GOAL
+Create a browser demo page that streams mic audio to the server over WebSocket, which forwards to Deepgram (STT) and sends partial/final transcripts back. On end-of-utterance, call OpenAI with stream=true, then send the emerging reply to ElevenLabs streaming TTS and stream audio chunks back to the browser to play immediately. Support barge-in (stop TTS if user speaks again).
+
+TECH
+- Node 20 + TypeScript + Express
+- ws (WebSockets)
+- Deepgram streaming STT
+- OpenAI (streaming responses)
+- ElevenLabs streaming TTS
+- Vite/React frontend page for the demo (or your existing React setup)
+
+FILES TO CREATE/UPDATE
+
+1) server/realtime/index.ts
+- Express app with GET /healthz → 200.
+- HTTP server upgrade handler for ws path /ws/realtime.
+- On ws connect: create a Session object { id, startedAt } and attach Orchestrator.
+- WS protocol: JSON messages { type: string, data?: any }. Types: "audio:chunk" (ArrayBuffer base64), "stt:partial", "stt:final", "tts:chunk", "tts:stop", "event", "error".
+- Keepalive ping/pong every 20s.
+
+2) server/realtime/orchestrator.ts
+- Accept audio frames from client and forward to Deepgram streaming WS.
+- Emit "stt:partial" as partials arrive (~100–150ms cadence).
+- Detect end-of-utterance (silence for ~300ms OR Deepgram is_final), then:
+  a) call OpenAI with stream=true, accumulate tokens
+  b) gate at small clause boundaries (punctuation or ~200–300ms) and pass text chunks to TTS
+- ElevenLabs: start streaming TTS; as audio bytes arrive, emit "tts:chunk".
+- If new "audio:chunk" arrives while TTS active, emit "tts:stop" and cancel current TTS (barge-in).
+- Collect timing metrics: t_first_partial, t_llm_first_token, t_tts_first_audio.
+
+3) server/realtime/providers/deepgram.ts
+- Function startDeepgramStream(): returns { sendAudio(frame), onPartial(cb), onFinal(cb), close() } using Deepgram realtime WS.
+- PCM16 LE 16k mono (or Opus passthrough if simpler).
+
+4) server/realtime/providers/openai.ts
+- streamLLM(prompt, context): async generator yielding tokens (use openai responses.stream if SDK available or SSE).
+
+5) server/realtime/providers/elevenlabs.ts
+- streamTTS(textChunksAsyncIterable): returns async generator yielding Uint8Array audio chunks using ElevenLabs streaming endpoint.
+- Provide cancel() to support barge-in.
+
+6) web/src/pages/InteractiveCallDemo.tsx
+- UI: Start/Stop buttons. On Start:
+  - getUserMedia({ audio:true })
+  - Use AudioWorklet or ScriptProcessorNode to slice mic into 20–40ms Float32/Int16 frames.
+  - Open WS to `${import.meta.env.VITE_PUBLIC_BASE_URL.replace(/^http/, 'ws')}/ws/realtime`
+  - Send frames as base64 in "audio:chunk".
+  - Show incoming "stt:partial"/"stt:final" text live.
+  - For "tts:chunk": append to a SourceBuffer via MediaSource OR decode via AudioContext and schedule playback with ~150–200ms initial buffer.
+  - If user speaks during playback, client sends a small "audio:bargein" hint (optional), although server can detect via new partials anyway.
+- Display small KPIs: time to first partial, time to first audio, interruptions handled.
+
+7) web/src/lib/ws.ts
+- Tiny helper to open WS with auto-reconnect and heartbeats.
+
+8) env.sample (root)
+OPENAI_API_KEY=
+DEEPGRAM_API_KEY=
+ELEVENLABS_API_KEY=
+PUBLIC_BASE_URL=   # e.g., https://<your-repl>.repl.co
+MODE=interactive
+
+ROUTING
+- Add a route/link to /interactive-demo from your nav (or give me the path where your routes live, and I’ll insert it).
+- Only start the realtime server when MODE=interactive; otherwise skip.
+
+ACCEPTANCE
+- Visit /healthz → 200 OK.
+- Open /interactive-demo, click Start, speak: see partial captions while talking.
+- After you stop, reply begins within ~300–500ms.
+- Start speaking mid-reply: TTS stops immediately and agent listens (barge-in).
+- No crashes when disconnecting/reconnecting the WS.
+
+QUALITY
+- TypeScript types for WS messages.
+- Backpressure control: drop if outgoing queue > 2s.
+- Try/catch with readable error events back to client.
