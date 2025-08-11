@@ -1676,7 +1676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               data: { text: testText, timestamp: timestamp }
             }));
             
-            setTimeout(() => {
+            setTimeout(async () => {
               ws.send(JSON.stringify({
                 type: 'stt_final', 
                 data: { text: testText, timestamp: timestamp }
@@ -1684,7 +1684,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Manually trigger the final transcript processing
               if (orchestrator) {
+                console.log('🧪 Manually triggering handleFinalTranscript for test');
+                // Call handleFinalTranscript directly since it's a private method,
+                // we'll emit the event and also manually process it
                 orchestrator.emit('stt:final', testText, timestamp);
+                
+                // Now call the public handleFinalTranscript method
+                await orchestrator.handleFinalTranscript(testText, timestamp);
               }
             }, 100);
             

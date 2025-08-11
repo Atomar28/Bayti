@@ -74,6 +74,7 @@ export class RealtimeOrchestrator extends EventEmitter {
       });
 
       this.deepgramStream.onFinal((text, timestamp) => {
+        console.log('🎯 Deepgram final transcript received:', text);
         this.emit('stt:final', text, timestamp);
         this.handleFinalTranscript(text, timestamp);
       });
@@ -138,7 +139,8 @@ export class RealtimeOrchestrator extends EventEmitter {
     this.emit('event', 'silence_detected');
   }
 
-  private async handleFinalTranscript(text: string, timestamp: number) {
+  public async handleFinalTranscript(text: string, timestamp: number) {
+    console.log('🎯 Processing final transcript:', text);
     if (!text.trim()) return;
 
     try {
@@ -158,6 +160,7 @@ export class RealtimeOrchestrator extends EventEmitter {
       }
 
       this.emit('event', 'processing_llm_response', { text });
+      console.log('🤖 Starting LLM response generation...');
 
       // Stream LLM response
       await this.generateAndStreamResponse(text, timestamp);
@@ -169,12 +172,15 @@ export class RealtimeOrchestrator extends EventEmitter {
   }
 
   private async generateAndStreamResponse(userText: string, timestamp: number) {
+    console.log('🚀 Generating LLM response for:', userText);
     try {
       const responseChunks: string[] = [];
       let firstTokenTimestamp: number | null = null;
 
+      console.log('📡 Calling OpenAI streamLLM...');
       // Stream response from LLM
       for await (const token of streamLLM(userText, this.llmContext)) {
+        console.log('🎯 Received token from OpenAI:', token);
         if (!firstTokenTimestamp) {
           firstTokenTimestamp = Date.now();
           this.metrics.tLLMFirstToken = firstTokenTimestamp - timestamp;

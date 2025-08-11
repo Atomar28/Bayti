@@ -63,21 +63,31 @@ export async function* streamTTS(
         throw new Error("No response body from ElevenLabs");
       }
 
-      // Stream audio chunks
-      const reader = response.body.getReader();
-      try {
-        while (true) {
-          if (cancelled) break;
-          
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          if (value) {
-            yield new Uint8Array(value);
+      // Stream audio chunks - handle Node.js ReadableStream
+      if (response.body.getReader) {
+        // Browser-style ReadableStream
+        const reader = response.body.getReader();
+        try {
+          while (true) {
+            if (cancelled) break;
+            
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            if (value) {
+              yield new Uint8Array(value);
+            }
           }
+        } finally {
+          reader.releaseLock();
         }
-      } finally {
-        reader.releaseLock();
+      } else {
+        // Node.js style stream
+        const stream = response.body as any;
+        for await (const chunk of stream) {
+          if (cancelled) break;
+          yield new Uint8Array(chunk);
+        }
       }
     }
   } catch (error) {
