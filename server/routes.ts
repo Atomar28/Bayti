@@ -1580,6 +1580,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               id: `session-${Date.now()}`,
               startedAt: new Date()
             });
+            
+            // Send session_started event to client
+            ws.send(JSON.stringify({
+              type: 'event',
+              data: {
+                name: 'session_started',
+                details: { message: 'Realtime server connected' },
+                timestamp: Date.now()
+              }
+            }));
 
             // Set up orchestrator event handlers with comprehensive logging
             orchestrator.on('stt:partial', (text, timestamp) => {
@@ -1671,15 +1681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Send welcome message
-    ws.send(JSON.stringify({
-      type: 'event',
-      data: {
-        name: 'session_started',
-        details: { message: 'Realtime server connected' },
-        timestamp: Date.now()
-      }
-    }));
+
   }
 
   // IMPORTANT: Remove the duplicate connection handler since we now use manual upgrade

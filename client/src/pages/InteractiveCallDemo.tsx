@@ -91,6 +91,8 @@ export default function InteractiveCallDemo() {
 
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((message: RealtimeWSMessage) => {
+    console.log('🔍 Received WebSocket message:', message.type, message);
+    
     switch (message.type) {
       case 'stt_partial':
         const partialMsg = message as STTPartialMessage;
@@ -143,6 +145,13 @@ export default function InteractiveCallDemo() {
       case 'event':
         const eventMsg = message as EventMessage;
         console.log('Event:', eventMsg.data.name, eventMsg.data.details);
+        
+        // Handle session events to show connection status
+        if (eventMsg.data.name === 'session_started') {
+          console.log('✅ Session started successfully');
+        } else if (eventMsg.data.name === 'session_ready') {
+          console.log('✅ Session ready for audio processing');
+        }
         
         // Handle specific events
         if (eventMsg.data.name === 'barge_in_detected') {
