@@ -35,6 +35,8 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **React Pricing Component Refactor (2025-08-11)**: Completely refactored the pricing page into a comprehensive React component with tabbed pricing structure. Implemented three distinct pricing models: Enterprise SaaS (subscription tiers: Pro $750/mo, Growth $1,950/mo, Scale $5,500/mo), Managed Service (per-call bundles: $0.30-$0.25/call), and API & Integrations (usage-based pricing from $0.30-$0.22/call). Added interactive features including monthly/annual billing toggle with 10% annual savings, "Coming Soon" badges for lead scraping features, comprehensive add-ons pricing, value proposition sections, price justification comparing to human callers ($0.37-$0.38 vs Bayti's $0.25+), detailed FAQ accordion, and mobile-optimized sticky CTAs. All pricing data is hardcoded for immediate deployment without external dependencies.
 
+**Standalone Pricing Page Implementation (2025-08-11)**: Successfully converted the React pricing component to a comprehensive standalone HTML page, replacing the original landing page pricing. The new pricing.html features full interactive tabbed functionality with JavaScript, maintaining all React component features including billing toggles, FAQ accordions, and smooth animations. Includes proper navigation linking back to main landing page and other sections. Preserved the original pricing as pricing-old.html backup. The standalone version provides faster loading with zero dependencies while maintaining the complete user experience of the React component.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
