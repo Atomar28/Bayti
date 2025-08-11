@@ -49,13 +49,15 @@ export function startDeepgramStream(config: DeepgramStreamConfig): DeepgramStrea
       const timestamp = Date.now();
       const isFinal = data.is_final;
 
+      console.log(`🎯 Deepgram transcript (${isFinal ? 'FINAL' : 'partial'}):`, transcript);
+
       if (isFinal) {
         finalCallback?.(transcript, timestamp);
       } else {
         partialCallback?.(transcript, timestamp);
       }
     } catch (error) {
-      console.error("Error processing Deepgram transcript:", error);
+      console.error("❌ Error processing Deepgram transcript:", error);
       errorCallback?.(error as Error);
     }
   });
@@ -81,11 +83,14 @@ export function startDeepgramStream(config: DeepgramStreamConfig): DeepgramStrea
   return {
     sendAudio: (audioBuffer: Buffer) => {
       try {
-        if (connection.getReadyState() === WebSocket.OPEN) {
+        if (connection.getReadyState() === 1) { // WebSocket.OPEN = 1
+          console.log('📡 Sending audio to Deepgram, size:', audioBuffer.length);
           connection.send(audioBuffer);
+        } else {
+          console.warn('⚠️  Deepgram connection not ready, state:', connection.getReadyState());
         }
       } catch (error) {
-        console.error("Error sending audio to Deepgram:", error);
+        console.error("❌ Error sending audio to Deepgram:", error);
         errorCallback?.(error as Error);
       }
     },

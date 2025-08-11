@@ -263,6 +263,8 @@ export default function InteractiveCallDemo() {
         const pcm16Array = new Uint8Array(pcm16.buffer);
         const audioBase64 = btoa(String.fromCharCode.apply(null, Array.from(pcm16Array)));
         
+        console.log('🎵 Sending audio chunk to server, size:', pcm16.length, 'samples');
+        
         const audioMessage: RealtimeWSMessage = {
           type: 'audio_chunk',
           data: {
@@ -293,11 +295,13 @@ export default function InteractiveCallDemo() {
       if (!success) return;
     }
 
+    console.log('🎙️  Starting audio recording...');
     setIsRecording(true);
   }, [micPermission, setupMicrophone]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
+    console.log('🛑 Stopping audio recording...');
     setIsRecording(false);
   }, []);
 

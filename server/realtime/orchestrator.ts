@@ -99,7 +99,10 @@ export class RealtimeOrchestrator extends EventEmitter {
 
       // Send audio to Deepgram
       if (this.deepgramStream) {
+        console.log('🎙️  Orchestrator forwarding audio to Deepgram, size:', audioData.length);
         this.deepgramStream.sendAudio(audioData);
+      } else {
+        console.warn('⚠️  No Deepgram stream available in orchestrator');
       }
 
       // Update metrics

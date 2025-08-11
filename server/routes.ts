@@ -1512,14 +1512,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (message.type === 'start_session') {
           // Initialize orchestrator for this session
           try {
+            console.log('🚀 Starting new realtime session...');
             orchestrator = new RealtimeOrchestrator({
               id: `session-${Date.now()}`,
               startedAt: new Date()
             });
 
-            // Set up orchestrator event handlers
+            // Set up orchestrator event handlers with comprehensive logging
             orchestrator.on('stt:partial', (text, timestamp) => {
-              console.log('STT Partial:', text);
+              console.log('🎤 STT Partial received:', text);
               ws.send(JSON.stringify({
                 type: 'stt_partial',
                 data: { text: text, timestamp: timestamp }
@@ -1527,7 +1528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             orchestrator.on('stt:final', (text, timestamp) => {
-              console.log('STT Final:', text);
+              console.log('🎤 STT Final received:', text);
               ws.send(JSON.stringify({
                 type: 'stt_final', 
                 data: { text: text, timestamp: timestamp }
@@ -1535,6 +1536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             orchestrator.on('tts:chunk', (audioChunk, timestamp) => {
+              console.log('🔊 TTS chunk received, size:', audioChunk.length);
               ws.send(JSON.stringify({
                 type: 'tts_chunk',
                 data: {
@@ -1545,6 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             orchestrator.on('event', (eventName, details) => {
+              console.log('📡 Orchestrator event:', eventName, details);
               ws.send(JSON.stringify({
                 type: 'event',
                 data: { name: eventName, details, timestamp: Date.now() }
@@ -1552,6 +1555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             orchestrator.on('error', (message, code) => {
+              console.error('❌ Orchestrator error:', message, code);
               ws.send(JSON.stringify({
                 type: 'error',
                 data: { message, code, timestamp: Date.now() }
@@ -1581,7 +1585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (message.type === 'audio_chunk' && orchestrator) {
           // Process audio chunk through orchestrator
           const audioData = Buffer.from(message.data.audioData, 'base64');
-          console.log('Processing audio chunk, size:', audioData.length);
+          console.log('🎵 Processing audio chunk, size:', audioData.length, 'bytes');
           await orchestrator.processAudioChunk(audioData, Date.now());
         }
       } catch (error) {
