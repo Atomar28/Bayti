@@ -1485,5 +1485,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for realtime communication
+  const { WebSocketServer } = await import("ws");
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws/realtime' 
+  });
+  
+  // Simple realtime WebSocket handler
+  wss.on('connection', (ws, req) => {
+    console.log('New realtime WebSocket connection');
+    
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        console.log('Received realtime message:', message.type);
+        
+        // Echo back for now - full implementation would use the orchestrator
+        if (message.type === 'ping') {
+          ws.send(JSON.stringify({
+            type: 'pong',
+            data: { timestamp: Date.now() }
+          }));
+        }
+      } catch (error) {
+        console.error('Error processing realtime message:', error);
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('Realtime WebSocket connection closed');
+    });
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'event',
+      data: {
+        name: 'session_started',
+        details: { message: 'Realtime server connected' },
+        timestamp: Date.now()
+      }
+    }));
+  });
+
   return httpServer;
 }
