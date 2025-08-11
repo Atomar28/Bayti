@@ -1489,36 +1489,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Setup WebSocket servers for realtime communication
   const { WebSocketServer } = await import("ws");
-  const { parse } = await import("url");
   
-  // Echo WebSocket for testing
+  // Create WebSocket servers WITHOUT automatic server binding - we'll handle upgrades manually
   const wssEcho = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({ noServer: true });
   
-  // Realtime WebSocket
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws/realtime' 
-  });
+  console.log('🔌 WebSocket servers initialized (noServer mode)');
 
   // Handle WebSocket upgrade manually for multiple paths
   httpServer.on('upgrade', (req, socket, head) => {
-    const { pathname } = parse(req.url || '');
-    console.log('🔧 WS upgrade requested for:', pathname);
-    
-    if (pathname === '/ws/echo') {
-      wssEcho.handleUpgrade(req, socket, head, (ws) => {
-        console.log('🔄 Echo WebSocket connected');
-        ws.send(JSON.stringify({ type: 'event', data: 'echo-connected' }));
-        ws.on('message', (msg) => {
-          console.log('🔄 Echo received:', msg.toString());
-          ws.send(msg); // Echo back
+    try {
+      console.log('🔧 WS upgrade requested:', req.url, 'from:', req.headers.host);
+      const url = new URL(req.url || '', `http://${req.headers.host}`);
+      const pathname = url.pathname;
+      console.log('🔍 Parsed pathname:', pathname);
+      
+      if (pathname === '/ws/echo') {
+        console.log('📡 Handling echo WebSocket upgrade...');
+        try {
+          console.log('🔑 Checking WebSocket headers:', {
+            upgrade: req.headers.upgrade,
+            connection: req.headers.connection,
+            websocketKey: req.headers['sec-websocket-key'],
+            version: req.headers['sec-websocket-version']
+          });
+          
+          wssEcho.handleUpgrade(req, socket, head, (ws) => {
+            console.log('✅ Echo WebSocket connected successfully');
+            
+            // Send immediate confirmation
+            ws.send('Echo server connected and ready');
+            
+            ws.on('message', (msg) => {
+              const message = msg.toString();
+              console.log('📨 Echo received:', message);
+              ws.send(`Echo: ${message}`); // Echo back with prefix
+            });
+            
+            ws.on('error', (err) => {
+              console.error('❌ Echo WebSocket error:', err);
+            });
+            
+            ws.on('close', (code, reason) => {
+              console.log('🔚 Echo WebSocket closed:', code, reason?.toString());
+            });
+          });
+          console.log('📡 Echo handleUpgrade completed');
+        } catch (error) {
+          console.error('💥 Echo handleUpgrade error:', error);
+          console.error('Error details:', error.stack);
+          socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+          socket.destroy();
+        }
+      } else if (pathname === '/ws/realtime') {
+        console.log('🎤 Handling realtime WebSocket upgrade...');
+        wss.handleUpgrade(req, socket, head, (ws) => {
+          console.log('✅ Realtime WebSocket connected');
+          handleRealtimeConnection(ws);
         });
-      });
-    } else if (pathname === '/ws/realtime') {
-      wss.handleUpgrade(req, socket, head, (ws) => {
-        console.log('🚀 Realtime WebSocket connected');
-        handleRealtimeConnection(ws);
-      });
+      } else {
+        console.log('❌ Unknown WebSocket path:', pathname, '- destroying socket');
+        socket.destroy();
+      }
+    } catch (error) {
+      console.error('💥 WebSocket upgrade error:', error);
+      socket.destroy();
     }
   });
   
