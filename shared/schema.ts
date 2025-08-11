@@ -32,17 +32,13 @@ export const callLogs = pgTable("call_logs", {
 export const leads = pgTable("leads", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  company: text("company"),
-  phoneNumber: text("phone_number").notNull(),
-  email: text("email"),
-  budget: text("budget"),
-  interestLevel: integer("interest_level").default(0), // 0-100
-  status: text("status").default("cold"), // 'hot', 'warm', 'cold'
-  industry: text("industry"),
-  companySize: text("company_size"),
-  lastContactDate: timestamp("last_contact_date"),
-  nextFollowUpDate: timestamp("next_follow_up_date"),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  address: text("address"),
+  status: text("status").default("new"), // 'new', 'contacted', 'qualified', 'converted', 'not_interested'
+  source: text("source").default("manual"), // 'upload', 'manual', 'api'
   notes: text("notes"),
+  lastContacted: timestamp("last_contacted"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

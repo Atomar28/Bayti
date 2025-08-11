@@ -10,6 +10,8 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { elevenLabsService } from "./elevenlabs";
+import multer from "multer";
+import csvParser from "csv-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -298,6 +300,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Configure multer for file uploads
+  const upload = multer({ 
+    dest: 'uploads/',
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'text/csv' || 
+          file.mimetype === 'application/vnd.ms-excel' ||
+          file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only CSV and Excel files are allowed'));
+      }
+    }
+  });
+
   // Leads endpoints
   app.get("/api/leads", async (req, res) => {
     try {
@@ -336,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/leads/:id", async (req, res) => {
+  app.put("/api/leads/:id", async (req, res) => {
     try {
       const updates = insertLeadSchema.partial().parse(req.body);
       const lead = await storage.updateLead(req.params.id, updates);
@@ -349,6 +366,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update lead", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.delete("/api/leads/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteLead(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      res.json({ message: "Lead deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete lead", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // File upload endpoint for leads
+  app.post("/api/leads/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const leads: any[] = [];
+      const fs = await import('fs');
+      
+      if (req.file.mimetype === 'text/csv') {
+        // Parse CSV file
+        await new Promise((resolve, reject) => {
+          fs.createReadStream(req.file.path)
+            .pipe(csvParser())
+            .on('data', (row) => {
+              // Map CSV columns to lead fields
+              leads.push({
+                name: row.Name || row.name || '',
+                email: row.Email || row.email || '',
+                phone: row.Phone || row.phone || '',
+                address: row.Address || row.address || '',
+                status: (row.Status || row.status || 'new').toLowerCase(),
+                source: 'upload',
+                notes: row.Notes || row.notes || ''
+              });
+            })
+            .on('end', resolve)
+            .on('error', reject);
+        });
+      } else {
+        // Handle Excel files (would need additional library like xlsx)
+        return res.status(400).json({ message: "Excel files not yet supported. Please use CSV format." });
+      }
+
+      // Validate and save leads
+      const createdLeads = [];
+      for (const leadData of leads) {
+        try {
+          if (leadData.name && leadData.email && leadData.phone) {
+            const validatedData = insertLeadSchema.parse(leadData);
+            const lead = await storage.createLead(validatedData);
+            createdLeads.push(lead);
+          }
+        } catch (error) {
+          console.warn("Skipping invalid lead:", leadData, error);
+        }
+      }
+
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({ 
+        message: `Successfully imported ${createdLeads.length} leads`,
+        imported: createdLeads.length,
+        total: leads.length
+      });
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({ message: "Failed to process uploaded file", error: error instanceof Error ? error.message : String(error) });
     }
   });
 

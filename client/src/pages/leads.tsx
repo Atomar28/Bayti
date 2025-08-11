@@ -1,248 +1,634 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, Phone, Eye, User, Mail, DollarSign, Calendar } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Plus, Download, Users, Phone, Mail, MapPin, Calendar, Trash2, Edit, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Lead } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+
+interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'not_interested';
+  source: 'upload' | 'manual' | 'api';
+  notes?: string;
+  createdAt: string;
+  lastContacted?: string;
+}
 
 export default function Leads() {
-  const queryClient = useQueryClient();
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+  const [isEditLeadOpen, setIsEditLeadOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [newLead, setNewLead] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    status: 'new' as Lead['status'],
+    source: 'manual' as Lead['source'],
+    notes: ''
+  });
+
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ["/api/leads"],
-    refetchInterval: 5000, // Refetch every 5 seconds to catch new appointments
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    staleTime: 0, // Always consider data stale to force fresh requests
+    refetchInterval: 30000,
   });
 
-  // Fetch appointments to show callback details on lead cards
-  const { data: appointmentsData } = useQuery({
-    queryKey: ["/api/v1/appointments"],
-    refetchInterval: 5000, // Refetch every 5 seconds for live updates
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    staleTime: 0, // Always consider data stale to force fresh requests
-  });
+  const leads: Lead[] = (leadsData as any)?.leads || [];
 
-  const exportMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("GET", "/api/export/leads");
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'leads.csv';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+  const addLeadMutation = useMutation({
+    mutationFn: async (lead: Omit<Lead, 'id' | 'createdAt' | 'source'>) => {
+      return apiRequest('POST', '/api/leads', { ...lead, source: 'manual' });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      setIsAddLeadOpen(false);
+      setNewLead({ name: '', email: '', phone: '', address: '', status: 'new', source: 'manual', notes: '' });
       toast({
-        title: "Export successful",
-        description: "Leads have been exported to CSV.",
+        title: "Success",
+        description: "Lead added successfully!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
-        title: "Export failed",
-        description: "Failed to export leads. Please try again.",
+        title: "Error",
+        description: error.message || "Failed to add lead",
         variant: "destructive",
       });
     },
   });
 
-  const leads = (leadsData as any)?.leads || [];
-  const appointments = (appointmentsData as any) || [];
+  const updateLeadMutation = useMutation({
+    mutationFn: async (lead: Lead) => {
+      return apiRequest('PUT', `/api/leads/${lead.id}`, lead);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      setIsEditLeadOpen(false);
+      setEditingLead(null);
+      toast({
+        title: "Success",
+        description: "Lead updated successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to update lead",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Function to get appointment details for a lead
-  const getLeadAppointment = (leadId: string) => {
-    return appointments.find((apt: any) => apt.leadId === leadId);
-  };
+  const deleteLeadMutation = useMutation({
+    mutationFn: async (leadId: string) => {
+      return apiRequest('DELETE', `/api/leads/${leadId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      toast({
+        title: "Success",
+        description: "Lead deleted successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete lead",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Function to format appointment date/time
-  const formatAppointmentTime = (dateTime: string) => {
-    const date = new Date(dateTime);
-    const isToday = new Date().toDateString() === date.toDateString();
-    const isTomorrow = new Date(Date.now() + 86400000).toDateString() === date.toDateString();
-    
-    const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-    
-    if (isToday) return `Today at ${timeStr}`;
-    if (isTomorrow) return `Tomorrow at ${timeStr}`;
-    return date.toLocaleDateString([], { 
-      month: 'short', 
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-  };
+  const uploadFileHandler = async () => {
+    if (!uploadFile) {
+      toast({
+        title: "Error",
+        description: "Please select a file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "hot":
-        return "bg-green-100 text-green-800";
-      case "warm":
-        return "bg-yellow-100 text-yellow-800";
-      case "cold":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    try {
+      const response = await fetch('/api/leads/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      setUploadFile(null);
+      toast({
+        title: "Success",
+        description: "Leads imported successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload file",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+  const exportLeads = () => {
+    const csvContent = [
+      ['Name', 'Email', 'Phone', 'Address', 'Status', 'Source', 'Notes', 'Created At'],
+      ...leads.map(lead => [
+        lead.name,
+        lead.email,
+        lead.phone,
+        lead.address || '',
+        lead.status,
+        lead.source,
+        lead.notes || '',
+        new Date(lead.createdAt).toLocaleDateString()
+      ])
+    ];
+
+    const csvString = csvContent.map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const getInterestColor = (level: number) => {
-    if (level >= 80) return "bg-green-500";
-    if (level >= 60) return "bg-yellow-500";
-    if (level >= 40) return "bg-orange-500";
-    return "bg-gray-400";
+  const getStatusColor = (status: Lead['status']) => {
+    switch (status) {
+      case 'new': return 'bg-blue-100 text-blue-800';
+      case 'contacted': return 'bg-yellow-100 text-yellow-800';
+      case 'qualified': return 'bg-green-100 text-green-800';
+      case 'converted': return 'bg-purple-100 text-purple-800';
+      case 'not_interested': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const getInterestLabel = (level: number) => {
-    if (level >= 80) return "High Interest";
-    if (level >= 60) return "Medium Interest";
-    if (level >= 40) return "Low Interest";
-    return "Unknown";
+  const formatStatus = (status: string) => {
+    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const formatLastContact = (date: Date | string | null) => {
-    if (!date) return "Never contacted";
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return `Last contacted ${formatDistanceToNow(dateObj, { addSuffix: true })}`;
+  const handleEditLead = (lead: Lead) => {
+    setEditingLead(lead);
+    setIsEditLeadOpen(true);
   };
 
-  return (
-    <div className="h-full overflow-y-auto">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4 sm:mb-0">Lead Management</h3>
-        <div className="flex items-center space-x-3">
-          <Button
-            variant="outline"
-            onClick={() => exportMutation.mutate()}
-            disabled={exportMutation.isPending}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export All
-          </Button>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Lead
-          </Button>
+  if (isLoading) {
+    return (
+      <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-48"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg p-6 h-40">
+                  <div className="h-full bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white shadow-sm rounded-lg p-6 animate-pulse">
-              <div className="h-32 bg-gray-200 rounded"></div>
+  return (
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 min-h-full">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Lead Management</h1>
+              <p className="mt-1 text-lg text-gray-600">Manage your leads for AI cold calling campaigns</p>
             </div>
-          ))}
+            <div className="flex items-center gap-4">
+              <Button onClick={exportLeads} variant="outline" className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
+              <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Lead
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
+            </div>
+          </div>
         </div>
-      ) : leads.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-500">No leads found</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {leads.map((lead: Lead) => (
-            <Card key={lead.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <User className="text-gray-600 w-5 h-5" />
-                    </div>
-                    <div className="ml-3">
-                      <h4 className="text-sm font-medium text-gray-900">{lead.name}</h4>
-                      <p className="text-xs text-gray-500">{lead.company || "No company"}</p>
-                    </div>
-                  </div>
-                  <Badge className={getStatusColor(lead.status || "cold")}>
-                    {getStatusLabel(lead.status || "cold")}
-                  </Badge>
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Phone className="w-4 h-4 mr-2" />
-                    <span>{lead.phoneNumber}</span>
-                  </div>
-                  {lead.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="w-4 h-4 mr-2" />
-                      <span className="truncate">{lead.email}</span>
-                    </div>
-                  )}
-                  {lead.budget && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      <span>{lead.budget}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>{formatLastContact(lead.lastContactDate)}</span>
-                  </div>
-                  
-                  {/* Show appointment details if this lead has a scheduled callback */}
-                  {(() => {
-                    const appointment = getLeadAppointment(lead.id);
-                    if (appointment) {
-                      return (
-                        <div className="mt-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="text-sm font-medium text-blue-900">📅 Scheduled Callback</p>
-                          <p className="text-xs text-blue-700">
-                            {formatAppointmentTime(appointment.scheduledTime)}
-                          </p>
-                          {appointment.description && (
-                            <p className="text-xs text-blue-600 mt-1">{appointment.description}</p>
-                          )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                  <Users className="w-6 h-6 text-blue-600" />
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Leads</p>
+                  <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Interest Level</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${getInterestColor(lead.interestLevel || 0)}`}
-                      style={{ width: `${lead.interestLevel || 0}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {getInterestLabel(lead.interestLevel || 0)} ({lead.interestLevel || 0}%)
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                  <Phone className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Qualified Leads</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {leads.filter(lead => lead.status === 'qualified').length}
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="mt-4 flex space-x-2">
-                  <Button size="sm" className="flex-1 bg-brand-500 hover:bg-brand-600">
-                    <Phone className="w-4 h-4 mr-1" />
-                    Call
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Eye className="w-4 h-4 mr-1" />
-                    Details
-                  </Button>
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                  <Calendar className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Converted</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {leads.filter(lead => lead.status === 'converted').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                  <FileSpreadsheet className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">New Leads</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {leads.filter(lead => lead.status === 'new').length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="list" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Lead List
+            </TabsTrigger>
+            <TabsTrigger value="upload" className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Upload Leads
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Lead List Tab */}
+          <TabsContent value="list">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle>All Leads</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Address</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.map((lead) => (
+                        <TableRow key={lead.id}>
+                          <TableCell className="font-medium">{lead.name}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="w-3 h-3" />
+                                {lead.email}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <Phone className="w-3 h-3" />
+                                {lead.phone}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {lead.address && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="w-3 h-3" />
+                                {lead.address}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(lead.status)}>
+                              {formatStatus(lead.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {lead.source}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(lead.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditLead(lead)}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => deleteLeadMutation.mutate(lead.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          </TabsContent>
+
+          {/* Upload Tab */}
+          <TabsContent value="upload">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle>Upload Lead Data</CardTitle>
+                <CardContent className="space-y-6">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Upload CSV, XLSX, or Google Sheets</h3>
+                    <p className="text-gray-500 mb-4">
+                      Drag and drop your file here, or click to browse
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload">
+                      <Button variant="outline" className="cursor-pointer">
+                        Choose File
+                      </Button>
+                    </label>
+                    {uploadFile && (
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600">Selected: {uploadFile.name}</p>
+                        <Button 
+                          onClick={uploadFileHandler}
+                          className="mt-2 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Upload Leads
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">File Format Requirements:</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Required columns: Name, Email, Phone</li>
+                      <li>• Optional columns: Address, Status, Notes</li>
+                      <li>• Maximum file size: 10MB</li>
+                      <li>• Supported formats: CSV, XLSX, XLS</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </CardHeader>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Add Lead Dialog */}
+        <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add New Lead</DialogTitle>
+              <DialogDescription>
+                Enter the lead information for AI cold calling campaigns.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  value={newLead.name}
+                  onChange={(e) => setNewLead({...newLead, name: e.target.value})}
+                  placeholder="Enter full name"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newLead.email}
+                  onChange={(e) => setNewLead({...newLead, email: e.target.value})}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone *</Label>
+                <Input
+                  id="phone"
+                  value={newLead.phone}
+                  onChange={(e) => setNewLead({...newLead, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={newLead.address}
+                  onChange={(e) => setNewLead({...newLead, address: e.target.value})}
+                  placeholder="Enter address"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={newLead.status} onValueChange={(value: Lead['status']) => setNewLead({...newLead, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="contacted">Contacted</SelectItem>
+                    <SelectItem value="qualified">Qualified</SelectItem>
+                    <SelectItem value="converted">Converted</SelectItem>
+                    <SelectItem value="not_interested">Not Interested</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Input
+                  id="notes"
+                  value={newLead.notes}
+                  onChange={(e) => setNewLead({...newLead, notes: e.target.value})}
+                  placeholder="Additional notes"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                onClick={() => addLeadMutation.mutate(newLead)}
+                disabled={!newLead.name || !newLead.email || !newLead.phone || addLeadMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {addLeadMutation.isPending ? 'Adding...' : 'Add Lead'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Lead Dialog */}
+        <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Lead</DialogTitle>
+              <DialogDescription>
+                Update the lead information.
+              </DialogDescription>
+            </DialogHeader>
+            {editingLead && (
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-name">Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingLead.name}
+                    onChange={(e) => setEditingLead({...editingLead, name: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-email">Email *</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editingLead.email}
+                    onChange={(e) => setEditingLead({...editingLead, email: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-phone">Phone *</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingLead.phone}
+                    onChange={(e) => setEditingLead({...editingLead, phone: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-address">Address</Label>
+                  <Input
+                    id="edit-address"
+                    value={editingLead.address || ''}
+                    onChange={(e) => setEditingLead({...editingLead, address: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select value={editingLead.status} onValueChange={(value: Lead['status']) => setEditingLead({...editingLead, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="qualified">Qualified</SelectItem>
+                      <SelectItem value="converted">Converted</SelectItem>
+                      <SelectItem value="not_interested">Not Interested</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-notes">Notes</Label>
+                  <Input
+                    id="edit-notes"
+                    value={editingLead.notes || ''}
+                    onChange={(e) => setEditingLead({...editingLead, notes: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                onClick={() => editingLead && updateLeadMutation.mutate(editingLead)}
+                disabled={!editingLead?.name || !editingLead?.email || !editingLead?.phone || updateLeadMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {updateLeadMutation.isPending ? 'Updating...' : 'Update Lead'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Extra spacing for scrollability */}
+        <div className="h-16"></div>
       </div>
     </div>
   );

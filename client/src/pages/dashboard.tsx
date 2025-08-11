@@ -209,60 +209,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* AI Call Logs Section */}
-        <div className="space-y-6">
-          <AICallLogs />
-        </div>
-        
-        {/* Recent Activity Section */}
-        <Card className="glass-card border-0 shadow-beautiful-lg">
-          <CardHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold text-gray-900">Recent Activity</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 px-4 py-2 rounded-xl transition-all duration-200">
-                View all <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {callsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                  </div>
-                ))}
-              </div>
-            ) : recentCalls.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No recent calls</p>
-            ) : (
-              <div className="space-y-4">
-                {recentCalls.map((call: any) => (
-                  <div key={call.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
-                    <div className="flex items-center">
-                      <div className={`w-3 h-3 rounded-full mr-4 ${
-                        call.status === 'qualified' ? 'bg-emerald-400' :
-                        call.status === 'no_answer' ? 'bg-red-400' : 'bg-amber-400'
-                      }`}></div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{call.phoneNumber}</p>
-                        <p className="text-xs text-gray-500">
-                          {call.startTime ? formatDistanceToNow(new Date(call.startTime), { addSuffix: true }) : "Unknown time"}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className={`${getStatusColor(call.status)} font-medium px-3 py-1`}>
-                      {formatStatus(call.status)}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+
           </TabsContent>
 
           {/* Appointments Tab */}

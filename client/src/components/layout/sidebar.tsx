@@ -8,7 +8,7 @@ interface SidebarProps {
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: ChartLine },
-  { name: "Call Logs", href: "/call-logs", icon: PhoneIcon },
+  { name: "Appointments/Callbacks", href: "/appointments", icon: PhoneIcon },
   { name: "Leads", href: "/leads", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
