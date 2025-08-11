@@ -198,6 +198,16 @@ export default function Header({ currentPage }: HeaderProps) {
               </PopoverContent>
             </Popover>
 
+            {/* Quick Access Link */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs px-3 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg"
+              onClick={() => window.open('/pricing.html', '_blank')}
+            >
+              Standalone Pricing
+            </Button>
+
             {/* User Menu - Enhanced and Bigger */}
             <div className="flex items-center space-x-5 pl-8 border-l border-gray-200/50">
               <div className="flex items-center space-x-4">

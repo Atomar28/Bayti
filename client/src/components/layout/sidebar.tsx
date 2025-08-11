@@ -12,6 +12,7 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Auto-Dial Campaigns", href: "/campaigns", icon: Megaphone },
+  { name: "Pricing", href: "/pricing", icon: Settings },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
