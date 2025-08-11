@@ -5,7 +5,8 @@ import { campaigns, campaignLeads, campaignCallLogs, suppressions } from '@share
 import { eq, desc, asc, and, sql } from 'drizzle-orm';
 import { parseCSV, parseExcel } from '../utils/parseLeads';
 import { isSuppressed, recordOptOut } from '../services/compliance';
-import { callQueue } from '../queues/calls.queue';
+// Temporarily disabled - BullMQ requires Redis
+// import { callQueue } from '../queues/calls.queue';
 import { nanoid } from 'nanoid';
 
 // Configure multer for file uploads
@@ -304,7 +305,9 @@ export function registerCampaignRoutes(app: Express) {
       
       for (const lead of pendingLeads) {
         try {
-          await callQueue.add('make-call', {
+          // Temporarily disabled - BullMQ requires Redis
+          console.log('Would queue call for lead:', lead.id, lead.phoneE164);
+          /* await callQueue.add('make-call', {
             campaignId,
             leadId: lead.id,
             phoneE164: lead.phoneE164,
@@ -313,7 +316,7 @@ export function registerCampaignRoutes(app: Express) {
             delay: Math.random() * 5000, // Randomize initial delays
             removeOnComplete: 100,
             removeOnFail: 50,
-          });
+          }); */
           
           // Update lead status
           await db
