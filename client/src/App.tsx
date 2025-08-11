@@ -11,6 +11,8 @@ import Leads from "@/pages/leads";
 import Analytics from "@/pages/analytics";
 import Settings from "@/pages/settings";
 import Campaigns from "@/pages/Campaigns";
+import Pricing from "@/pages/Pricing";
+import Solutions from "@/pages/Solutions";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { useState, useEffect } from "react";
@@ -26,6 +28,8 @@ function Router() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/campaigns" component={Campaigns} />
       <Route path="/settings" component={Settings} />
+      <Route path="/pricing" component={Pricing} />
+      <Route path="/solutions" component={Solutions} />
       <Route component={NotFound} />
     </Switch>
   );

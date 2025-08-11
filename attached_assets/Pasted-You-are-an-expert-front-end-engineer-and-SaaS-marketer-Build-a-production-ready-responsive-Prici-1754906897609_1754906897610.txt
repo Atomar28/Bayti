@@ -1,0 +1,134 @@
+You are an expert front-end engineer and SaaS marketer. Build a production-ready, responsive **Pricing** page for “Bayti” inside a React + Vite + Tailwind project (use shadcn/ui where helpful). The page must be conversion-focused and accessible.
+
+GOALS
+- Sell Bayti with 3 pricing models: Enterprise SaaS (subscription), Managed Calling Service (per-call bundles), API SaaS/CPaaS (usage-based).
+- Emphasize market-beating prices and humanlike AI.
+- Include “COMING SOON” for lead scraping.
+- Strong CTAs and trust elements.
+
+TECH & STYLE
+- React + TypeScript
+- Tailwind, clean modern aesthetic, rounded-2xl cards, soft shadows, good white space
+- shadcn/ui for buttons/cards/switch/tabs if available
+- Mobile-first, then desktop grid
+- SEO-friendly: semantic tags, descriptive meta (title: “Bayti Pricing – AI Calling for Real Estate”)
+
+PAGE SECTIONS (in order)
+1) Sticky Trust Banner (top)
+   - Copy: “Cheaper than hiring a human, as natural as one — runs 24/7 at scale.”
+   - Small secondary: “Founders’ Launch Pricing—limited time.”
+
+2) Hero
+   - H1: “Simple, competitive pricing to scale your outbound”
+   - Sub: “Bayti is cheaper than hiring a human, but just as natural — and it works 24/7, never takes breaks, and dials at massive scale.”
+   - Primary CTA: “Start a campaign”
+   - Secondary CTA (ghost): “Talk to sales”
+   - Small line: “All plans include compliance tools and opt-out handling.”
+
+3) Model Tabs (3 tabs with animated underline)
+   - Tabs: “Enterprise SaaS”, “Managed Service”, “API”
+   - Persist a short explainer per tab.
+
+TAB CONTENT & PRICING (hard-code values)
+
+A) Enterprise SaaS (Subscription)
+   - Short explainer: “Full platform access with automation, dashboards, and integrations.”
+   - Three plan cards:
+     • Pro — $750/mo (5 seats) — Call threshold 5,000/mo — Overage $0.05/call
+     • Growth — $1,950/mo (15 seats) — Threshold 20,000/mo — Overage $0.05/call
+     • Scale — $5,500/mo (50 seats) — Threshold 70,000/mo — Overage $0.05/call
+   - Feature list (✓/—):
+     ✓ Automatic AI cold calling (campaign uploads)
+     ✓ Manual call mode
+     ✓ Automatic callbacks & rescheduling
+     ✓ Appointment booking tool
+     ✓ Real-time dashboard & analytics
+     ✓ API access
+     Add-ons:
+       • Premium voices (+$0.05/min)
+       • Priority call routing (+15% on base)
+       • AI appointment optimization (+$200/mo)
+       • Lead scraping (COMING SOON)
+   - CTA on each card: “Start Free Pilot” (or “Talk to Sales” for Scale)
+
+B) Managed Calling Service (Per-Call Bundles)
+   - Explainer: “We run the calling for you. You get results. No platform access.”
+   - Three bundles:
+     • Starter — 1,000 calls — **$300** ($0.30/call)
+     • Growth — 5,000 calls — **$1,400** ($0.28/call)
+     • Scale — 20,000 calls — **$5,000** ($0.25/call)
+   - Feature list:
+     ✓ Professional AI agent (humanlike)
+     ✓ Campaign reporting (summary)
+     ✓ Compliance & opt-out handling
+     — Platform access
+     — Automation, callbacks, dashboard
+     Add-ons (per call unless noted):
+       • Premium voices (+$0.05/call)
+       • Priority routing (+$0.02/call)
+       • Rush campaign (+$50 flat)
+       • Lead scraping (COMING SOON)
+   - CTA: “Book Managed Campaign”
+
+C) API SaaS / CPaaS (Usage-Based)
+   - Explainer: “Plug our AI calling, booking, and (soon) lead gen into your stack.”
+   - Tiers:
+     • Small (<1,000 calls/mo): **$0.30 per call**
+     • Volume (1,000–10,000): **$0.25 per call**
+     • Enterprise (10,000+): **$0.22 per call** (contact sales)
+   - Appointment booking API: **$0.10 per booking**
+   - Lead scraping API: **COMING SOON**
+   - Add-ons:
+       • Premium voices (+$0.05/min)
+       • Dedicated throughput (+$99/mo)
+   - CTA: “Get API Key”
+
+4) Value Props (3-up icons)
+   - “Humanlike by design” – neural TTS + SSML + smart pacing
+   - “Fast at scale” – auto-queueing, concurrency, business-hour controls
+   - “Compliance-first” – opt-out, suppression, audit logs
+
+5) Price Confidence Block
+   - Heading: “Priced to beat human callers”
+   - Copy: “Typical pro callers charge ~$0.37–$0.38 per call in Dubai. Bayti gives you humanlike quality, automation, and analytics — from $0.25 per call at scale.”
+
+6) Add-ons Grid
+   - Cards with short blurbs:
+     • Premium voices — “Hyper-realistic voices for premium campaigns.” — +$0.05/min
+     • Priority routing — “Lower wait times for time-sensitive pushes.” — +15% base OR +$0.02/call
+     • AI appointment optimization — “Smarter follow-ups to increase booked meetings.” — +$200/mo
+     • Lead scraping — “Auto-fill your funnel with targeted leads.” — **COMING SOON**
+
+7) FAQ (accordion)
+   - “What counts as a call?” → “A completed outbound attempt initiated by Bayti’s dialer.”
+   - “Do you charge for failed/out-of-service numbers?” → “Optional: exclude unreachable numbers (configurable).”
+   - “What about international rates?” → “Pricing above assumes UAE; contact sales for other regions.”
+   - “Can I switch plans later?” → “Yes, upgrade/downgrade anytime; prorated.”
+   - “Do you offer pilots?” → “Yes—ask sales for a 7-day pilot on Enterprise or a 500-call trial on Managed Service.”
+   - “Do you integrate with my CRM?” → “Enterprise SaaS includes CRM integrations; API also available.”
+
+8) CTA Footer
+   - Headline: “Ready to outcall the competition?”
+   - Buttons: “Start a campaign” (primary), “Talk to sales” (secondary)
+
+UI/UX REQUIREMENTS
+- Pricing cards with toggleable monthly/annual view (annual shows 10% discount and “2 months free” style annotation)
+- “COMING SOON” badges styled subtle amber pill
+- Tooltips for thresholds, overage rates, add-ons
+- Trust cues: small lock icon row: “GDPR-ready • Opt-out compliant • 99.9% uptime”
+- Sticky “Talk to Sales” button on mobile
+- Animations: subtle hover lift on cards; fade-in sections
+
+IMPLEMENTATION NOTES
+- Create page at: /src/pages/Pricing.tsx
+- Export default component; include all copy above (adjust styling—but keep exact prices and labels)
+- Use Tailwind utility classes; ensure dark mode friendly
+- No external calls; static content; componentize Card, Badge, CTAButton, FAQItem for re-use
+
+BONUS (optional but try):
+- A tiny “Cost Estimator” widget (right rail on desktop, bottom on mobile):
+  Inputs: monthly calls, premium voices yes/no, priority routing yes/no
+  Output: estimated monthly cost for Managed Service and API.
+  Show an “Enterprise might be cheaper” hint if calls > threshold/seat scenario.
+
+Deliver a complete, polished Pricing page that we can drop into a marketing site and ship today.
