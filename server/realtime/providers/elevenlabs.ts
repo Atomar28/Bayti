@@ -64,9 +64,11 @@ export async function* streamTTS(
       }
 
       // Stream audio chunks - handle Node.js ReadableStream
-      if (response.body.getReader) {
+      const body = response.body as any;
+      
+      if (body && body.getReader && typeof body.getReader === 'function') {
         // Browser-style ReadableStream
-        const reader = response.body.getReader();
+        const reader = body.getReader();
         try {
           while (true) {
             if (cancelled) break;
@@ -81,13 +83,14 @@ export async function* streamTTS(
         } finally {
           reader.releaseLock();
         }
-      } else {
-        // Node.js style stream
-        const stream = response.body as any;
-        for await (const chunk of stream) {
+      } else if (body && body[Symbol.asyncIterator]) {
+        // Node.js style async iterable stream
+        for await (const chunk of body) {
           if (cancelled) break;
           yield new Uint8Array(chunk);
         }
+      } else {
+        throw new Error('Unsupported stream type from ElevenLabs API');
       }
     }
   } catch (error) {
