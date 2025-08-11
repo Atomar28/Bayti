@@ -61,6 +61,12 @@ export default function InteractiveCallDemo() {
       setIsConnected(true);
       setConnectionStatus('connected');
       console.log('Connected to realtime server');
+      
+      // Initialize session
+      ws.send({
+        type: 'start_session',
+        data: { timestamp: Date.now() }
+      });
     });
 
     ws.onClose(() => {
@@ -84,7 +90,7 @@ export default function InteractiveCallDemo() {
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((message: RealtimeWSMessage) => {
     switch (message.type) {
-      case 'stt:partial':
+      case 'stt_partial':
         const partialMsg = message as STTPartialMessage;
         setPartialTranscript(partialMsg.data.text);
         
@@ -97,7 +103,7 @@ export default function InteractiveCallDemo() {
         }
         break;
 
-      case 'stt:final':
+      case 'stt_final':
         const finalMsg = message as STTFinalMessage;
         setPartialTranscript('');
         
@@ -114,9 +120,9 @@ export default function InteractiveCallDemo() {
         }));
         break;
 
-      case 'tts:chunk':
+      case 'tts_chunk':
         const ttsMsg = message as TTSChunkMessage;
-        handleAudioChunk(ttsMsg.data.audio);
+        handleAudioChunk(ttsMsg.data.audioChunk);
         
         // Update metrics on first audio
         if (!metrics.tFirstAudio) {
@@ -127,7 +133,7 @@ export default function InteractiveCallDemo() {
         }
         break;
 
-      case 'tts:stop':
+      case 'tts_stop':
         setIsPlaying(false);
         stopAudioPlayback();
         break;
@@ -258,9 +264,9 @@ export default function InteractiveCallDemo() {
         const audioBase64 = btoa(String.fromCharCode.apply(null, Array.from(pcm16Array)));
         
         const audioMessage: RealtimeWSMessage = {
-          type: 'audio:chunk',
+          type: 'audio_chunk',
           data: {
-            audio: audioBase64,
+            audioData: audioBase64,
             timestamp: Date.now()
           }
         };

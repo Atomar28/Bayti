@@ -1,97 +1,86 @@
-// Re-export types from server for client use
-export interface WSMessage {
-  type: string;
-  data?: any;
-}
+// Realtime WebSocket message types for client-server communication
 
-export interface AudioChunkMessage extends WSMessage {
-  type: "audio:chunk";
-  data: {
-    audio: string; // base64 encoded audio data
-    timestamp: number;
-  };
-}
-
-export interface STTPartialMessage extends WSMessage {
-  type: "stt:partial";
-  data: {
-    text: string;
-    timestamp: number;
-  };
-}
-
-export interface STTFinalMessage extends WSMessage {
-  type: "stt:final";
-  data: {
-    text: string;
-    timestamp: number;
-  };
-}
-
-export interface TTSChunkMessage extends WSMessage {
-  type: "tts:chunk";
-  data: {
-    audio: string; // base64 encoded audio data
-    timestamp: number;
-  };
-}
-
-export interface TTSStopMessage extends WSMessage {
-  type: "tts:stop";
-  data: {
-    reason: string;
-    timestamp: number;
-  };
-}
-
-export interface EventMessage extends WSMessage {
-  type: "event";
-  data: {
-    name: string;
-    details?: any;
-    timestamp: number;
-  };
-}
-
-export interface ErrorMessage extends WSMessage {
-  type: "error";
-  data: {
-    message: string;
-    code?: string;
-    timestamp: number;
-  };
-}
-
-export interface BargeinMessage extends WSMessage {
-  type: "audio:bargein";
-  data: {
-    timestamp: number;
-  };
-}
-
-export interface PingMessage extends WSMessage {
-  type: "ping";
-  data: {
-    timestamp: number;
-  };
-}
-
-export interface PongMessage extends WSMessage {
-  type: "pong";
-  data: {
-    timestamp: number;
-  };
-}
-
-// Union type for all possible messages
 export type RealtimeWSMessage = 
   | AudioChunkMessage
   | STTPartialMessage 
   | STTFinalMessage
   | TTSChunkMessage
-  | TTSStopMessage
   | EventMessage
   | ErrorMessage
-  | BargeinMessage
   | PingMessage
   | PongMessage;
+
+export interface AudioChunkMessage {
+  type: 'audio_chunk';
+  data: {
+    audioData: string; // base64 encoded audio
+    timestamp: number;
+  };
+}
+
+export interface STTPartialMessage {
+  type: 'stt_partial';
+  data: {
+    text: string;
+    timestamp: number;
+  };
+}
+
+export interface STTFinalMessage {
+  type: 'stt_final';
+  data: {
+    text: string;
+    timestamp: number;
+  };
+}
+
+export interface TTSChunkMessage {
+  type: 'tts_chunk';
+  data: {
+    audioChunk: string; // base64 encoded audio
+    timestamp: number;
+  };
+}
+
+export interface EventMessage {
+  type: 'event';
+  data: {
+    name: string;
+    details?: any;
+    timestamp?: number;
+  };
+}
+
+export interface ErrorMessage {
+  type: 'error';
+  data: {
+    message: string;
+    code?: string;
+    timestamp?: number;
+  };
+}
+
+export interface PingMessage {
+  type: 'ping';
+  data: {
+    timestamp: number;
+  };
+}
+
+export interface PongMessage {
+  type: 'pong';
+  data: {
+    timestamp: number;
+  };
+}
+
+export interface SessionMetrics {
+  sessionId: string;
+  interruptions: number;
+  totalAudioDuration: number;
+  conversationTurns: number;
+  tFirstPartial?: number;
+  tFirstAudio?: number;
+  tLLMFirstToken?: number;
+  tTTSFirstAudio?: number;
+}

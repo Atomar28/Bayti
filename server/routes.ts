@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import { elevenLabsService } from "./elevenlabs";
 import multer from "multer";
 import csvParser from "csv-parser";
+import { RealtimeOrchestrator } from "./realtime/orchestrator";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1493,29 +1494,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     path: '/ws/realtime' 
   });
   
-  // Simple realtime WebSocket handler
+  // Enhanced realtime WebSocket handler with orchestrator integration
   wss.on('connection', (ws, req) => {
     console.log('New realtime WebSocket connection');
+    let orchestrator: RealtimeOrchestrator | null = null;
     
-    ws.on('message', (data) => {
+    ws.on('message', async (data) => {
       try {
         const message = JSON.parse(data.toString());
         console.log('Received realtime message:', message.type);
         
-        // Echo back for now - full implementation would use the orchestrator
         if (message.type === 'ping') {
           ws.send(JSON.stringify({
             type: 'pong',
             data: { timestamp: Date.now() }
           }));
+        } else if (message.type === 'start_session') {
+          // Initialize orchestrator for this session
+          try {
+            orchestrator = new RealtimeOrchestrator({
+              openAIKey: process.env.OPENAI_API_KEY!,
+              elevenLabsKey: process.env.ELEVENLABS_API_KEY!,
+              deepgramKey: process.env.DEEPGRAM_API_KEY!
+            });
+
+            // Set up orchestrator event handlers
+            orchestrator.on('stt:partial', (data) => {
+              ws.send(JSON.stringify({
+                type: 'stt_partial',
+                data: { text: data.text, timestamp: Date.now() }
+              }));
+            });
+
+            orchestrator.on('stt:final', (data) => {
+              ws.send(JSON.stringify({
+                type: 'stt_final', 
+                data: { text: data.text, timestamp: Date.now() }
+              }));
+            });
+
+            orchestrator.on('tts:chunk', (audioChunk, timestamp) => {
+              ws.send(JSON.stringify({
+                type: 'tts_chunk',
+                data: {
+                  audioChunk: Buffer.from(audioChunk).toString('base64'),
+                  timestamp: timestamp
+                }
+              }));
+            });
+
+            orchestrator.on('event', (eventName, details) => {
+              ws.send(JSON.stringify({
+                type: 'event',
+                data: { name: eventName, details, timestamp: Date.now() }
+              }));
+            });
+
+            orchestrator.on('error', (message, code) => {
+              ws.send(JSON.stringify({
+                type: 'error',
+                data: { message, code, timestamp: Date.now() }
+              }));
+            });
+
+            ws.send(JSON.stringify({
+              type: 'event',
+              data: {
+                name: 'session_ready',
+                details: { message: 'Orchestrator initialized, ready for audio' },
+                timestamp: Date.now()
+              }
+            }));
+
+          } catch (error) {
+            console.error('Failed to initialize orchestrator:', error);
+            ws.send(JSON.stringify({
+              type: 'error',
+              data: { 
+                message: 'Failed to initialize realtime session', 
+                code: 'INIT_ERROR',
+                timestamp: Date.now()
+              }
+            }));
+          }
+        } else if (message.type === 'audio_chunk' && orchestrator) {
+          // Process audio chunk through orchestrator
+          const audioData = Buffer.from(message.data.audioData, 'base64');
+          await orchestrator.processAudioChunk(audioData);
         }
       } catch (error) {
         console.error('Error processing realtime message:', error);
+        ws.send(JSON.stringify({
+          type: 'error',
+          data: { 
+            message: 'Failed to process message', 
+            code: 'MESSAGE_ERROR',
+            timestamp: Date.now()
+          }
+        }));
       }
     });
     
     ws.on('close', () => {
       console.log('Realtime WebSocket connection closed');
+      if (orchestrator) {
+        orchestrator.cleanup();
+      }
     });
     
     // Send welcome message
