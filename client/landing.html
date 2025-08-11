@@ -323,6 +323,170 @@
             transform: translateZ(0);
             will-change: transform;
         }
+
+        /* Advanced 3D card effects */
+        .card-3d {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        .card-3d:hover {
+            transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+        }
+
+        /* Morphing gradient backgrounds */
+        .morphing-gradient {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
+            background-size: 400% 400%;
+            animation: morphGradient 8s ease infinite;
+        }
+
+        @keyframes morphGradient {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 50% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Particle effect overlay */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-delay: 1s; }
+        .particle:nth-child(3) { left: 30%; animation-delay: 2s; }
+        .particle:nth-child(4) { left: 40%; animation-delay: 3s; }
+        .particle:nth-child(5) { left: 50%; animation-delay: 4s; }
+        .particle:nth-child(6) { left: 60%; animation-delay: 5s; }
+        .particle:nth-child(7) { left: 70%; animation-delay: 0.5s; }
+        .particle:nth-child(8) { left: 80%; animation-delay: 1.5s; }
+        .particle:nth-child(9) { left: 90%; animation-delay: 2.5s; }
+
+        /* Enhanced hover effects */
+        .mega-hover {
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mega-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.8s;
+        }
+
+        .mega-hover:hover::before {
+            transform: translateX(100%);
+        }
+
+        .mega-hover:hover {
+            transform: translateY(-20px) scale(1.05);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Pulsating glow effect */
+        .pulse-glow {
+            animation: pulseGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+            }
+            to {
+                box-shadow: 0 0 40px rgba(102, 126, 234, 0.8), 0 0 60px rgba(147, 51, 234, 0.4);
+            }
+        }
+
+        /* Text typewriter effect */
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: white; }
+        }
+
+        /* Glass morphism enhanced */
+        .glass-premium {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Liquid button effect */
+        .liquid-btn {
+            position: relative;
+            overflow: hidden;
+            border-radius: 25px;
+        }
+
+        .liquid-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.8s;
+        }
+
+        .liquid-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Advanced text shadow effects */
+        .premium-text-shadow {
+            text-shadow: 
+                0 1px 0 rgba(255, 255, 255, 0.4),
+                0 2px 0 rgba(0, 0, 0, 0.2),
+                0 3px 5px rgba(0, 0, 0, 0.3),
+                0 6px 10px rgba(0, 0, 0, 0.2),
+                0 0 30px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Neon glow text */
+        .neon-text {
+            color: #fff;
+            text-shadow:
+                0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor,
+                0 0 20px #667eea,
+                0 0 35px #667eea,
+                0 0 40px #667eea;
+        }
     </style>
 </head>
 <body class="scroll-smooth">
@@ -416,25 +580,38 @@
                 Your browser does not support the video tag.
             </video>
             
-            <!-- Dark overlay for text readability -->
-            <div class="absolute inset-0 bg-black/40" style="z-index: 2;"></div>
+            <!-- Enhanced overlay with morphing gradient -->
+            <div class="absolute inset-0 morphing-gradient opacity-70" style="z-index: 2;"></div>
+            
+            <!-- Particle effect overlay -->
+            <div class="particles" style="z-index: 3;">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
         </div>
         
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative" style="z-index: 10;">
             <div class="animate-fade-in-up">
-                <h1 class="text-6xl md:text-8xl font-bold mb-6 leading-tight parallax-text">
-                    <span class="text-white">The&nbsp;Future&nbsp;of</span><br>
-                    <span class="animated-gradient font-extrabold" style="text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);">Real&nbsp;Estate&nbsp;AI</span>
+                <h1 class="text-7xl md:text-9xl font-black mb-8 leading-tight parallax-text premium-text-shadow">
+                    <span class="neon-text">The&nbsp;Future&nbsp;of</span><br>
+                    <span class="morphing-gradient bg-clip-text text-transparent font-extrabold text-8xl md:text-[12rem]">Real&nbsp;Estate&nbsp;AI</span>
                 </h1>
-                <p class="text-xl md:text-2xl text-white/90 mb-10 max-w-4xl mx-auto leading-relaxed animate-stagger-1" style="text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);">
-                    Transform your real estate business with <span class="text-yellow-300 font-semibold">intelligent AI calling agents</span> that qualify&nbsp;leads,&nbsp;schedule&nbsp;appointments,&nbsp;and&nbsp;close deals&nbsp;<span class="text-green-300 font-semibold">24/7</span>.
+                <p class="text-2xl md:text-3xl text-white mb-12 max-w-5xl mx-auto leading-relaxed animate-stagger-1 premium-text-shadow">
+                    Transform your real estate business with <span class="neon-text font-bold">intelligent AI calling agents</span> that qualify&nbsp;leads,&nbsp;schedule&nbsp;appointments,&nbsp;and&nbsp;close deals&nbsp;<span class="text-yellow-400 font-bold glow-text">24/7</span>.
                 </p>
                 
-                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-stagger-2">
-                    <a href="/auth" class="btn-premium px-10 py-5 text-white font-bold text-xl rounded-2xl transform transition-all duration-300 hover:scale-105 shadow-2xl inline-block">
+                <div class="flex flex-col sm:flex-row gap-8 justify-center items-center mb-20 animate-stagger-2">
+                    <a href="/auth" class="btn-premium liquid-btn px-14 py-6 text-white font-black text-2xl rounded-3xl transform transition-all duration-500 hover:scale-110 shadow-2xl inline-block pulse-glow">
                         🚀 Start Free Trial
                     </a>
-                    <button class="px-10 py-5 border-3 border-white/80 text-white font-bold text-xl rounded-2xl hover:bg-white/10 hover:border-white transition-all duration-300 transform hover:scale-105 backdrop-blur-sm shadow-xl">
+                    <button class="px-14 py-6 border-4 border-white/90 text-white font-black text-2xl rounded-3xl hover:bg-white/20 hover:border-white transition-all duration-500 transform hover:scale-110 backdrop-blur-lg shadow-2xl glass-premium">
                         🎬 Watch Demo
                     </button>
                 </div>
@@ -466,52 +643,52 @@
     <!-- Features Section -->
     <section id="features" class="pt-32 pb-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                    Powerful&nbsp;Features&nbsp;for&nbsp;<span class="text-blue-600 font-extrabold">Modern&nbsp;Agents</span>
+            <div class="text-center mb-20">
+                <h2 class="text-6xl md:text-8xl font-black mb-8 premium-text-shadow">
+                    <span class="text-gray-900">Powerful Features for</span><br><span class="morphing-gradient bg-clip-text text-transparent font-extrabold">Modern Agents</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-3xl mx-auto prose-enhanced">
-                    Everything you need to automate your real estate operations and scale your business to new heights.
+                <p class="text-2xl md:text-3xl text-gray-700 max-w-6xl mx-auto leading-relaxed font-medium">
+                    Everything you need to <span class="neon-text font-bold">automate your real estate operations</span> and scale your business to new heights.
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                 <!-- Feature 1 -->
-                <div class="feature-card glass rounded-2xl p-8 card-hover backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl card-glow">
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg icon-glow float-icon">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card glass-premium rounded-3xl p-10 mega-hover backdrop-blur-xl bg-gradient-to-br from-white/20 to-white/5 border-2 border-white/30 shadow-2xl card-3d">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl pulse-glow float-icon">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">🤖 Intelligent Calling</h3>
-                    <p class="text-gray-600 text-lg leading-relaxed">
-                        AI agents that sound human, qualify leads automatically, and handle objections with sophisticated conversation flows.
+                    <h3 class="text-3xl font-black text-gray-900 mb-6 premium-text-shadow">🤖 Intelligent Calling</h3>
+                    <p class="text-gray-700 text-xl leading-relaxed font-medium">
+                        AI agents that sound <span class="text-blue-600 font-bold">perfectly human</span>, qualify leads automatically, and handle objections with sophisticated conversation flows.
                     </p>
                 </div>
                 
                 <!-- Feature 2 -->
-                <div class="feature-card glass rounded-2xl p-8 card-hover backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl card-glow">
-                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg icon-glow float-icon" style="animation-delay: 0.5s;">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card glass-premium rounded-3xl p-10 mega-hover backdrop-blur-xl bg-gradient-to-br from-white/20 to-white/5 border-2 border-white/30 shadow-2xl card-3d">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl pulse-glow float-icon" style="animation-delay: 0.5s;">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">📊 Smart Analytics</h3>
-                    <p class="text-gray-600 text-lg leading-relaxed">
-                        Real-time insights into call performance, lead quality, and conversion rates with actionable recommendations.
+                    <h3 class="text-3xl font-black text-gray-900 mb-6 premium-text-shadow">📊 Smart Analytics</h3>
+                    <p class="text-gray-700 text-xl leading-relaxed font-medium">
+                        Real-time insights into call performance, lead quality, and conversion rates with <span class="text-purple-600 font-bold">actionable recommendations</span>.
                     </p>
                 </div>
                 
                 <!-- Feature 3 -->
-                <div class="feature-card glass rounded-2xl p-8 card-hover backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl card-glow">
-                    <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg icon-glow float-icon" style="animation-delay: 1s;">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card glass-premium rounded-3xl p-10 mega-hover backdrop-blur-xl bg-gradient-to-br from-white/20 to-white/5 border-2 border-white/30 shadow-2xl card-3d">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl pulse-glow float-icon" style="animation-delay: 1s;">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">⏰ 24/7 Operations</h3>
-                    <p class="text-gray-600 text-lg leading-relaxed">
-                        Never miss a lead again. Our AI agents work around the clock, ensuring every opportunity is captured and nurtured.
+                    <h3 class="text-3xl font-black text-gray-900 mb-6 premium-text-shadow">⏰ 24/7 Operations</h3>
+                    <p class="text-gray-700 text-xl leading-relaxed font-medium">
+                        Never miss a lead again. Our AI agents work <span class="text-green-600 font-bold">around the clock</span>, ensuring every opportunity is captured and nurtured.
                     </p>
                 </div>
                 
@@ -560,47 +737,54 @@
     <!-- Demo Section -->
     <section id="demo" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-5xl md:text-6xl font-bold mb-6">
-                    <span class="text-gray-900">See</span> <span class="animated-gradient font-extrabold">BaytiAI</span> <span class="text-gray-900">in Action</span>
+            <div class="text-center mb-20">
+                <h2 class="text-6xl md:text-8xl font-black mb-8 premium-text-shadow">
+                    <span class="text-gray-900">See</span> <span class="morphing-gradient bg-clip-text text-transparent font-extrabold">BaytiAI</span> <span class="text-gray-900">in Action</span>
                 </h2>
-                <p class="text-xl text-gray-600 max-w-4xl mx-auto prose-enhanced leading-relaxed">
-                    🎯 Watch how our AI agents transform real estate lead generation and qualification with <span class="text-blue-600 font-semibold">cutting-edge technology</span>.
+                <p class="text-2xl md:text-3xl text-gray-700 max-w-6xl mx-auto leading-relaxed font-medium">
+                    🎯 Watch how our AI agents transform real estate lead generation and qualification with <span class="neon-text font-bold">cutting-edge technology</span>.
                 </p>
             </div>
             
-            <div class="max-w-4xl mx-auto">
-                <div class="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-900 to-gray-800">
-                    <div class="aspect-w-16 aspect-h-9">
-                        <div class="w-full h-96 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                            <div class="text-center">
-                                <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-                                    </svg>
+            <div class="max-w-6xl mx-auto">
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl morphing-gradient p-1">
+                    <div class="bg-black rounded-3xl overflow-hidden">
+                        <div class="aspect-w-16 aspect-h-9">
+                            <div class="w-full h-[500px] flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
+                                <!-- Enhanced background pattern -->
+                                <div class="absolute inset-0 opacity-20">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-pulse"></div>
                                 </div>
-                                <h3 class="text-white text-xl font-semibold mb-2">Product Demo Video</h3>
-                                <p class="text-white/60 mb-4">See how Bayti revolutionizes real estate</p>
-                                <button class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                                    Play Demo
-                                </button>
+                                
+                                <div class="text-center relative z-10">
+                                    <div class="w-28 h-28 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8 pulse-glow">
+                                        <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-white text-4xl font-black mb-4 neon-text">Product Demo Video</h3>
+                                    <p class="text-white/80 mb-8 text-xl font-medium">See how BaytiAI revolutionizes real estate</p>
+                                    <button class="liquid-btn px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-xl rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-2xl pulse-glow">
+                                        🎬 Play Demo
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-                    <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 card-hover">
-                        <div class="text-5xl font-bold text-blue-600 mb-3 animated-gradient">300%</div>
-                        <div class="text-lg font-semibold text-gray-700">📈 Increase in Lead Quality</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mt-20">
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-white mega-hover glass-premium backdrop-blur-xl border-2 border-blue-200/50 shadow-2xl">
+                        <div class="text-7xl font-black text-blue-600 mb-4 morphing-gradient bg-clip-text text-transparent pulse-glow">300%</div>
+                        <div class="text-2xl font-bold text-gray-800">📈 Increase in Lead Quality</div>
                     </div>
-                    <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 card-hover">
-                        <div class="text-5xl font-bold text-purple-600 mb-3 animated-gradient">50%</div>
-                        <div class="text-lg font-semibold text-gray-700">💰 Reduction in Costs</div>
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-purple-100 via-purple-50 to-white mega-hover glass-premium backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl">
+                        <div class="text-7xl font-black text-purple-600 mb-4 morphing-gradient bg-clip-text text-transparent pulse-glow">50%</div>
+                        <div class="text-2xl font-bold text-gray-800">💰 Reduction in Costs</div>
                     </div>
-                    <div class="text-center p-6 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 card-hover">
-                        <div class="text-5xl font-bold text-green-600 mb-3 animated-gradient">24/7</div>
-                        <div class="text-lg font-semibold text-gray-700">🔄 Availability</div>
+                    <div class="text-center p-8 rounded-3xl bg-gradient-to-br from-green-100 via-green-50 to-white mega-hover glass-premium backdrop-blur-xl border-2 border-green-200/50 shadow-2xl">
+                        <div class="text-7xl font-black text-green-600 mb-4 morphing-gradient bg-clip-text text-transparent pulse-glow">24/7</div>
+                        <div class="text-2xl font-bold text-gray-800">🔄 Availability</div>
                     </div>
                 </div>
             </div>
