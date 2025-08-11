@@ -1,5 +1,6 @@
-import { Worker, Job } from 'bullmq';
-import Redis from 'ioredis';
+// Temporarily disabled - BullMQ requires Redis
+// import { Worker, Job } from 'bullmq';
+// import Redis from 'ioredis';
 import { db } from '../db';
 import { campaigns, campaignLeads, campaignCallLogs } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
