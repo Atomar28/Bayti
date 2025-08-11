@@ -8,7 +8,9 @@ export type RealtimeWSMessage =
   | EventMessage
   | ErrorMessage
   | PingMessage
-  | PongMessage;
+  | PongMessage
+  | StartSessionMessage
+  | TTSStopMessage;
 
 export interface AudioChunkMessage {
   type: 'audio_chunk';
@@ -73,6 +75,18 @@ export interface PongMessage {
     timestamp: number;
   };
 }
+
+export interface StartSessionMessage {
+  type: 'start_session';
+  data?: any;
+}
+
+export interface TTSStopMessage {
+  type: 'tts_stop';
+  data?: any;
+}
+
+export type RealtimeWSMessageType = 'error' | 'event' | 'ping' | 'pong' | 'audio_chunk' | 'stt_partial' | 'stt_final' | 'tts_chunk' | 'start_session' | 'tts_stop';
 
 export interface SessionMetrics {
   sessionId: string;

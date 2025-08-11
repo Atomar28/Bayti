@@ -46,8 +46,10 @@ export default function InteractiveCallDemo() {
 
   // Create WebSocket connection
   const createConnection = useCallback(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws/realtime`;
+    // ALWAYS build from origin, not current page path
+    const wsBase = window.location.origin.replace(/^http/i, "ws").replace(/\/$/, "");
+    const wsUrl = `${wsBase}/ws/realtime`;
+    console.log('🔗 Connecting to WebSocket:', wsUrl);
     
     const ws = createWSConnection({
       url: wsUrl,

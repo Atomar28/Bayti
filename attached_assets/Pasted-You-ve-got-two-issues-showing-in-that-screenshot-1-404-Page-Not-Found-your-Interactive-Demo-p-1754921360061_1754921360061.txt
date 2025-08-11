@@ -1,0 +1,108 @@
+You’ve got two issues showing in that screenshot:
+	1.	404 Page Not Found — your “Interactive Demo” page isn’t actually registered in your front-end router.
+	2.	Bad WebSocket URL — the client is building the WS URL from the current path (/interactive-demo/...) so it ends up trying to connect to something like wss://.../interactive-demo/realtime/healthz (and even tries to open healthz as a WebSocket 🙃).
+
+Let’s fix both in minutes.
+
+⸻
+
+A) Register the Interactive Demo route
+
+If you’re using React Router (adjust paths to your app):
+
+// web/src/App.tsx (or wherever your routes are)
+import InteractiveCallDemo from "./pages/InteractiveCallDemo";
+
+<Routes>
+  {/* ...existing routes */}
+  <Route path="/interactive-demo" element={<InteractiveCallDemo />} />
+</Routes>
+
+And make sure your sidebar link points exactly to /interactive-demo.
+
+⸻
+
+B) Build URLs from the origin, not the current page path
+
+In InteractiveCallDemo.tsx (client):
+
+// ALWAYS build from origin
+const ORIGIN = window.location.origin; // e.g., https://your-app.repl.co
+
+// Health check (HTTP/HTTPS, not WS)
+async function pingHealth() {
+  const res = await fetch(`${ORIGIN}/realtime/healthz`, { cache: "no-store" });
+  if (!res.ok) throw new Error("healthz failed");
+}
+
+// WebSocket endpoints (use wss)
+const WS_BASE = ORIGIN.replace(/^http/i, "ws").replace(/\/$/, "");
+
+// Echo (debug)
+const ECHO_WS = `${WS_BASE}/ws/echo`;
+
+// Realtime
+const REALTIME_WS = `${WS_BASE}/ws/realtime`;
+
+Then:
+
+const ws = new WebSocket(ECHO_WS); // or REALTIME_WS later
+
+Don’t prefix with the current route, and don’t try to open /realtime/healthz as a WebSocket. Healthz is a normal HTTP GET.
+
+⸻
+
+C) Make sure the server exposes both routes on the same server
+
+In your Node entry (not app.listen, use the server object):
+
+import http from "http";
+import express from "express";
+import { WebSocketServer } from "ws";
+
+const app = express();
+app.get("/realtime/healthz", (_req, res) => res.status(200).json({ ok: true }));
+
+const server = http.createServer(app);
+
+// echo ws for debugging
+const wssEcho = new WebSocketServer({ noServer: true });
+
+server.on("upgrade", (req, socket, head) => {
+  const url = new URL(req.url || "", `http://${req.headers.host}`);
+  if (url.pathname === "/ws/echo") {
+    return wssEcho.handleUpgrade(req, socket, head, (ws) => {
+      ws.send(JSON.stringify({ type: "event", data: "echo-connected" }));
+      ws.on("message", (m) => ws.send(m));
+    });
+  }
+  // your /ws/realtime upgrade handler here too
+});
+
+server.listen(process.env.PORT || 3000, () =>
+  console.log("HTTP+WS listening")
+);
+
+
+⸻
+
+D) Quick retest sequence
+	1.	Open https://…repl.co/interactive-demo in a new tab.
+	2.	In DevTools Console, run:
+
+const base = location.origin.replace(/^http/i,'ws').replace(/\/$/,'');
+const ws = new WebSocket(base + '/ws/echo');
+ws.onmessage = e => console.log('echo', e.data);
+ws.onopen = () => ws.send('ping');
+
+You should see echo ping.
+
+	3.	Hit GET https://…/realtime/healthz in the browser — should return { ok: true }.
+	4.	Now use your page’s Connect / Start Recording.
+
+If any step fails, tell me:
+	•	the exact URL you’re on,
+	•	the browser console error,
+	•	and the server log line around upgrade (we’ll pinpoint it fast).
+
+Once this is green, flipping to real STT/TTS is a 5-minute env change. After that we can wire Twilio for real phone calls.

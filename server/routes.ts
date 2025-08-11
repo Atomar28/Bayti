@@ -1650,5 +1650,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // IMPORTANT: Remove the duplicate connection handler since we now use manual upgrade
   // wss.on('connection', ...); - This will be handled by handleRealtimeConnection()
 
+  // Add health check endpoint
+  app.get('/realtime/healthz', (_req, res) => {
+    res.status(200).json({ 
+      ok: true, 
+      timestamp: Date.now(),
+      service: 'BaytiAI Realtime Server' 
+    });
+  });
+
   return httpServer;
 }

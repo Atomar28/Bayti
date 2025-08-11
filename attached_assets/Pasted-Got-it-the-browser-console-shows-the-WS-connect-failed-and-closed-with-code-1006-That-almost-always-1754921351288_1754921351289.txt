@@ -1,0 +1,107 @@
+Got it—the browser console shows the WS connect failed and closed with code 1006. That almost always means the server never accepted the WebSocket upgrade on /ws/echo. Two common causes:
+	1.	Your HTTP server isn’t wiring server.on('upgrade', …) (so nothing is listening for /ws/echo).
+	2.	The page you opened is served by a different process/port than the WS server (so the upgrade hits the wrong place).
+
+Let’s fix it in 3 quick checks.
+
+⸻
+
+1) Verify the backend is on the same origin
+
+In the same tab, open:
+
+/realtime/healthz
+
+If you don’t get 200 OK { ok: true, … }, your frontend and backend aren’t on the same server/port. In that case, skip to step 3 (proxy).
+
+⸻
+
+2) Make sure your HTTP server handles WS upgrades
+
+Open your server entry (where you call listen). Ensure it looks like this:
+
+// server/index.ts (or your main server file)
+import http from 'http';
+import express from 'express';
+import { WebSocketServer } from 'ws';
+
+const app = express();
+
+// mount your routes here (including /realtime/healthz)
+app.get('/realtime/healthz', (_req, res) => res.status(200).json({ ok: true }));
+
+// IMPORTANT: one HTTP server for both Express and WS
+const server = http.createServer(app);
+
+// --- Echo WS for debugging ---
+const wssEcho = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  try {
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    if (url.pathname === '/ws/echo') {
+      wssEcho.handleUpgrade(req, socket, head, (ws) => {
+        ws.send(JSON.stringify({ type: 'event', data: 'echo-connected' }));
+        ws.on('message', (msg) => ws.send(msg)); // echo
+      });
+      return;
+    }
+    // your /ws/realtime upgrade handler goes here too
+  } catch (e) {
+    socket.destroy();
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`HTTP+WS listening on :${PORT}`));
+
+Key points:
+	•	Use one http.createServer(app) and attach upgrade to that server.
+	•	Don’t call app.listen(...)—you need the server instance for WS.
+
+Try the echo test again:
+
+const base = location.origin.replace(/^http/i,'ws').replace(/\/$/,'');
+const ws = new WebSocket(base + '/ws/echo');
+ws.onmessage = e => console.log('Echo received:', e.data);
+ws.onopen = () => ws.send(JSON.stringify({ hello: 'world' }));
+
+If you now get “Echo received…”, your WS layer is good.
+
+⸻
+
+3) If your frontend runs on Vite/another port → add a WS proxy
+
+If /realtime/healthz was not reachable in step 1, your React dev server is serving the page and your backend is on a different port. You need a proxy so the page can call /ws/* on the backend.
+
+Add to vite.config.ts (or update server.proxy):
+
+export default defineConfig({
+  server: {
+    proxy: {
+      '/realtime': { target: 'http://localhost:3000', changeOrigin: true },
+      '/ws': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        ws: true, // IMPORTANT for WebSocket proxy
+      },
+    },
+  },
+});
+
+Restart Vite, open your page again, and re-run the echo test. The proxy forwards /ws/* upgrades to your Node server.
+
+⸻
+
+4) (Optional but recommended) Deploy to get a .repl.co URL
+
+The .replit.dev preview sometimes adds proxy layers. If you Deploy (Autoscale), you’ll get https://<app>.<user>.repl.co, which is simpler for WS/WSS. Then set:
+	•	PUBLIC_BASE_URL=https://<app>.<user>.repl.co
+
+⸻
+
+Next step after echo works
+	•	Try connecting to /ws/realtime from the same base you used for echo.
+	•	If /ws/realtime connects but no speech/partials, the issue is in the orchestrator (easy to debug next).
+
+If you paste your server entry file name and the snippet where you start Express, I’ll point to the exact line to attach the upgrade handler so this works in one shot.
