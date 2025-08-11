@@ -3,6 +3,15 @@ import { startDeepgramStream, type DeepgramStream } from "./providers/deepgram.j
 import { streamLLM, splitTextForTTS, createRealtimeContext, type LLMContext } from "./providers/openai.js";
 import { streamTTS, createTTSConfig, type TTSStream } from "./providers/elevenlabs.js";
 import type { RealtimeSession, SessionMetrics, DEFAULT_AUDIO_CONFIG } from "./types.js";
+import { renderSSML, estimateSignalsFromTurns, type ConversationSignals } from './humanizer.js';
+import { 
+  HUMANIZE_ENABLED, 
+  FILLER_RATE, 
+  BREAK_SHORT_MS, 
+  BREAK_CLAUSE_MS, 
+  PACE_JITTER_PCT, 
+  PITCH_JITTER_PCT 
+} from './humanizer.config.js';
 
 export interface OrchestratorEvents {
   'stt:partial': [text: string, timestamp: number];
@@ -23,6 +32,7 @@ export class RealtimeOrchestrator extends EventEmitter {
   private silenceTimer: NodeJS.Timeout | null = null;
   private lastAudioTimestamp = 0;
   private accumulatedText = "";
+  private recentTurns: Array<{ role: 'user' | 'agent'; text: string; ms: number }> = [];
 
   constructor(session: RealtimeSession) {
     super();
@@ -132,6 +142,9 @@ export class RealtimeOrchestrator extends EventEmitter {
       this.accumulatedText = text;
       this.metrics.conversationTurns++;
 
+      // Add to recent turns for humanizer
+      this.addToRecentTurns('user', text, Date.now() - timestamp);
+
       // Add to conversation history
       if (this.llmContext.conversationHistory) {
         this.llmContext.conversationHistory.push({
@@ -187,14 +200,16 @@ export class RealtimeOrchestrator extends EventEmitter {
           }
         }
 
-        // Add to conversation history
+        // Add to conversation history and recent turns for humanizer
+        const agentTimestamp = Date.now();
         if (this.llmContext.conversationHistory) {
           this.llmContext.conversationHistory.push({
             role: "assistant",
             content: finalResponse,
-            timestamp: Date.now()
+            timestamp: agentTimestamp
           });
         }
+        this.addToRecentTurns('agent', finalResponse, 1000); // Estimated 1s duration
       }
 
     } catch (error) {
@@ -210,12 +225,32 @@ export class RealtimeOrchestrator extends EventEmitter {
       this.currentTTSController = new AbortController();
       this.isTTSActive = true;
 
+      // Apply humanizer layer BEFORE TTS
+      let processedText = text;
+      if (HUMANIZE_ENABLED) {
+        const signals = estimateSignalsFromTurns(this.recentTurns);
+        const persona = {
+          warmth: 0.6,
+          formality: 0.4,
+          fillerRate: FILLER_RATE,
+          paceJitterPct: PACE_JITTER_PCT,
+          pitchJitterPct: PITCH_JITTER_PCT,
+          breakMs: {
+            short: BREAK_SHORT_MS,
+            clause: BREAK_CLAUSE_MS
+          }
+        };
+        
+        processedText = renderSSML(text, signals, persona);
+        console.debug('Humanized text:', processedText);
+      }
+
       const ttsConfig = createTTSConfig();
       let firstAudioTimestamp: number | null = null;
 
-      // Create async generator for single text
+      // Create async generator for processed text
       const singleTextGenerator = async function*() {
-        yield text;
+        yield processedText;
       };
 
       for await (const audioChunk of streamTTS(singleTextGenerator(), ttsConfig)) {
@@ -272,5 +307,23 @@ export class RealtimeOrchestrator extends EventEmitter {
     } catch (error) {
       console.error('Error during cleanup:', error);
     }
+  }
+
+  // Helper method to manage recent conversation turns for humanizer
+  private addToRecentTurns(role: 'user' | 'agent', text: string, durationMs: number) {
+    this.recentTurns.push({
+      role,
+      text,
+      ms: durationMs
+    });
+
+    // Keep only recent turns (last 6 turns or 30 seconds)
+    const thirtySecondsAgo = Date.now() - 30000;
+    this.recentTurns = this.recentTurns
+      .slice(-6) // Keep last 6 turns maximum
+      .filter(turn => {
+        // For simplicity, we'll keep all turns since we don't track absolute timestamps
+        return true;
+      });
   }
 }

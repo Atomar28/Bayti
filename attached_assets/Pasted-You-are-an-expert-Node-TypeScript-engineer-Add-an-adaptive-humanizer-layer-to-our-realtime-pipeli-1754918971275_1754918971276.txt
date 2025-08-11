@@ -1,0 +1,87 @@
+You are an expert Node/TypeScript engineer. Add an adaptive “humanizer” layer to our realtime pipeline, then integrate it into the orchestrator BEFORE TTS. Do NOT start servers or run installs; only create/modify files and summarize changes.
+
+GOAL
+- Convert LLM reply chunks into natural, SSML-enhanced speech with:
+  1) micro-pauses (<break/>),
+  2) subtle pace/pitch variation (<prosody/>),
+  3) sparing backchannels/fillers (“right,” “okay,” “mm-hmm”),
+  4) adaptive mirroring of the caller’s energy/speed/sentiment (based on recent turns),
+  5) immediate barge-in safety (never long uninterruptible clips).
+- Make the module configurable by env and safe (SSML sanitized).
+- Unit tests for core transforms.
+
+FILES TO ADD / UPDATE
+
+1) server/realtime/humanizer.ts
+- Export:
+  - type Persona = { name?: string; warmth?: number; formality?: number; fillerRate?: number; paceJitterPct?: number; pitchJitterPct?: number; breakMs?: { short: number; clause: number; } }
+  - type ConversationSignals = { avgWordsPerMin?: number; userEnergy?: 'low'|'med'|'high'; sentiment?: 'neg'|'neu'|'pos'; lastUserText?: string; }
+  - function renderSSML(text: string, signals: ConversationSignals, persona?: Persona): string
+  - function sanitizeSSML(ssml: string): string
+  - function estimateSignalsFromTurns(turns: Array<{role:'user'|'agent', text:string, ms:number}>) : ConversationSignals
+- Behavior:
+  - Insert <break time="Xms"/> after commas/full stops and before long clauses. Use persona.breakMs (defaults: short=150, clause=220).
+  - Randomize prosody rate ±persona.paceJitterPct (default 5%) and pitch ±persona.pitchJitterPct (default 2%), but clamp to 92–107% and –3%…+3%.
+  - Add a short backchannel 10–15% of the time ONLY if text begins with a direct answer or confirmation (avoid inside sensitive content). Backchannels list: ["right,", "okay,", "sure,", "mm-hmm,", "got it,"]
+  - If signals.userEnergy==='low', bias to slightly slower rate (–3%) and more pauses; if 'high', bias +3% and fewer pauses.
+  - If signals.sentiment==='neg', prepend a brief empathy tag once per reply (“I understand.”) with a short break.
+  - Keep output under ~2 clauses per chunk to preserve barge-in.
+  - Wrap final in <speak>…</speak>, then sanitize.
+
+2) server/realtime/humanizer.config.ts
+- Export defaults:
+  export const HUMANIZE_ENABLED = (process.env.HUMANIZE_ENABLED ?? 'true').toLowerCase()==='true';
+  export const FILLER_RATE = Number(process.env.FILLER_RATE ?? 0.12); // 12%
+  export const BREAK_SHORT_MS = Number(process.env.BREAK_SHORT_MS ?? 150);
+  export const BREAK_CLAUSE_MS = Number(process.env.BREAK_CLAUSE_MS ?? 220);
+  export const PACE_JITTER_PCT = Number(process.env.PACE_JITTER_PCT ?? 5);
+  export const PITCH_JITTER_PCT = Number(process.env.PITCH_JITTER_PCT ?? 2);
+
+3) server/realtime/orchestrator.ts  (modify)
+- Import { renderSSML, estimateSignalsFromTurns } and the config.
+- Maintain a small rolling window of recent turns (timestamps + text) to compute signals each time you are about to speak.
+- Where you currently stream LLM tokens and gate to clauses, do:
+   const signals = estimateSignalsFromTurns(recentTurns);
+   const ssml = HUMANIZE_ENABLED ? renderSSML(clauseText, signals, /* persona */ { warmth:0.6, formality:0.4, fillerRate:FILLER_RATE, paceJitterPct:PACE_JITTER_PCT, pitchJitterPct:PITCH_JITTER_PCT, breakMs:{ short:BREAK_SHORT_MS, clause:BREAK_CLAUSE_MS }}) : clauseText;
+   // Then feed 'ssml' into TTS (your streamTTS should accept SSML when provider supports it)
+- Ensure barge-in still cancels current TTS immediately; keep clauses short (<= ~3 seconds of speech). If your TTS wrapper needs a flag, set { ssml: true }.
+
+4) server/realtime/ssmlSafe.ts
+- Export:
+  - function escapeTextForSSML(s: string): string  // escape &, <, >, quotes
+  - function stripDangerousTags(ssml: string): string // allowlist speak|prosody|break|emphasis|say-as; remove others
+- Use these inside sanitizeSSML.
+
+5) tests/humanizer.test.ts
+- Minimal tests (no runner install; just export a function runHumanizerTests() we can invoke in dev):
+  - it("adds clause breaks and keeps SSML valid")
+  - it("applies small pace/pitch jitter")
+  - it("inserts filler at configured probability (statistical, over N runs)")
+  - it("mirrors low vs high energy by adjusting rate and breaks")
+- Keep deterministic mode via Math.random stub if needed.
+
+6) env.sample  (append)
+HUMANIZE_ENABLED=true
+FILLER_RATE=0.12
+BREAK_SHORT_MS=150
+BREAK_CLAUSE_MS=220
+PACE_JITTER_PCT=5
+PITCH_JITTER_PCT=2
+
+IMPLEMENTATION DETAILS
+- Keep the humanizer side-effect free (pure functions). No network calls.
+- Ensure renderSSML never returns empty <speak/>; if text is empty, return an empty string to skip TTS.
+- Keep clause splitting simple: split on /([.?!]|,)/, accumulate ~12–20 words max.
+- Never insert multiple fillers per chunk; at most one, at the beginning.
+- Sanitize aggressively: escape user-provided text and strip unknown tags.
+
+ACCEPTANCE
+- When HUMANIZE_ENABLED=true, spoken output has micro-pauses, subtle pace/pitch variation, and occasional brief backchannels, with SSML-valid output and no provider errors.
+- Barge-in behavior unchanged: chunks remain short and interruptible.
+- estimateSignalsFromTurns lowers pace and increases breaks for low energy; raises pace slightly for high energy.
+- With HUMANIZE_ENABLED=false, the system behaves exactly as before.
+
+QUALITY
+- All new files in TypeScript; light JSDoc on public functions.
+- Keep logs minimal; if you log, use an existing log helper or console.debug.
+- Summarize exactly which files were created/updated and any lines added in orchestrator.ts to integrate the humanizer.

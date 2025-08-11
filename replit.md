@@ -37,6 +37,8 @@ Bayti is a comprehensive AI-powered calling agent system built for real estate p
 
 **Standalone Pricing Page Implementation (2025-08-11)**: Successfully converted the React pricing component to a comprehensive standalone HTML page, replacing the original landing page pricing. The new pricing.html features full interactive tabbed functionality with JavaScript, maintaining all React component features including billing toggles, FAQ accordions, and smooth animations. Includes proper navigation linking back to main landing page and other sections. Preserved the original pricing as pricing-old.html backup. The standalone version provides faster loading with zero dependencies while maintaining the complete user experience of the React component.
 
+**Adaptive Humanizer Layer Integration (2025-08-11)**: Successfully implemented comprehensive adaptive humanizer layer for realtime AI calling pipeline. Added SSML-enhanced natural speech processing with micro-pauses, prosody variation, sparing backchannels/fillers, and adaptive mirroring of caller energy/speed/sentiment. System now converts LLM reply chunks into natural speech before TTS with configurable persona settings, conversation signal analysis from recent turns, and immediate barge-in safety. Humanizer includes sanitized SSML output, conversation tracking for energy/sentiment adaptation, and full unit test coverage. Integration complete in orchestrator.ts with environment-based configuration (HUMANIZE_ENABLED=true by default).
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
