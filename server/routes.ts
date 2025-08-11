@@ -242,6 +242,8 @@ async function generateAIResponse(userInput: string, callSid: string): Promise<s
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+
   // Serve static files from attached_assets
   app.use('/attached_assets', express.static(path.join(__dirname, '..', 'attached_assets')));
   // Call Logs endpoints

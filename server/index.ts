@@ -1,10 +1,24 @@
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Static HTML pages - serve these before any other middleware including Vite
+app.get("/pricing.html", (req, res) => {
+  res.sendFile(path.resolve(import.meta.dirname, "../client/pricing.html"));
+});
+
+app.get("/solutions.html", (req, res) => {
+  res.sendFile(path.resolve(import.meta.dirname, "../client/solutions.html"));
+});
+
+app.get("/landing.html", (req, res) => {
+  res.sendFile(path.resolve(import.meta.dirname, "../client/landing.html"));
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
