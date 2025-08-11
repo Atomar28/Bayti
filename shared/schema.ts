@@ -220,3 +220,109 @@ export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 
 export type ProjectScript = typeof projectScripts.$inferSelect;
 export type InsertProjectScript = z.infer<typeof insertProjectScriptSchema>;
+
+// Auto-Dial Campaign Tables
+export const campaigns = pgTable("campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  status: text("status").default("DRAFT"), // 'DRAFT', 'RUNNING', 'PAUSED', 'STOPPED', 'DONE'
+  pacingMaxConcurrent: integer("pacing_max_concurrent").default(2),
+  interCallMs: integer("inter_call_ms").default(1500),
+  timezone: text("timezone").default("Asia/Dubai"),
+  businessHours: jsonb("business_hours").$type<{start: string, end: string, days: number[]}>().default(sql`'{"start":"09:30","end":"19:30","days":[1,2,3,4,5,6]}'`), // Sun=0
+  scriptId: varchar("script_id").references(() => callScripts.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id),
+});
+
+export const campaignLeads = pgTable("campaign_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").notNull().references(() => campaigns.id, { onDelete: 'cascade' }),
+  fullName: text("full_name"),
+  phoneE164: text("phone_e164").notNull(),
+  email: text("email"),
+  notes: text("notes"),
+  custom: jsonb("custom"),
+  status: text("status").default("PENDING"), // 'PENDING', 'DIALING', 'CONNECTED', 'COMPLETED', 'FAILED', 'RETRY', 'DO_NOT_CALL'
+  attempts: integer("attempts").default(0),
+  lastError: text("last_error"),
+  lastCallSid: text("last_call_sid"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const campaignCallLogs = pgTable("campaign_call_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  leadId: varchar("lead_id").notNull().references(() => campaignLeads.id, { onDelete: 'cascade' }),
+  callSid: text("call_sid"),
+  status: text("status"),
+  durationSec: integer("duration_sec"),
+  recordingUrl: text("recording_url"),
+  transcript: text("transcript"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const suppressions = pgTable("suppressions", {
+  phoneE164: text("phone_e164").primaryKey(),
+  reason: text("reason"),
+  addedAt: timestamp("added_at").defaultNow(),
+});
+
+// Relations for campaigns
+export const campaignRelations = relations(campaigns, ({ many, one }) => ({
+  leads: many(campaignLeads),
+  script: one(callScripts, {
+    fields: [campaigns.scriptId],
+    references: [callScripts.id]
+  }),
+  createdByUser: one(users, {
+    fields: [campaigns.createdBy],
+    references: [users.id]
+  }),
+}));
+
+export const campaignLeadRelations = relations(campaignLeads, ({ one, many }) => ({
+  campaign: one(campaigns, {
+    fields: [campaignLeads.campaignId],
+    references: [campaigns.id]
+  }),
+  callLogs: many(campaignCallLogs),
+}));
+
+export const campaignCallLogRelations = relations(campaignCallLogs, ({ one }) => ({
+  lead: one(campaignLeads, {
+    fields: [campaignCallLogs.leadId],
+    references: [campaignLeads.id]
+  }),
+}));
+
+// Insert schemas for campaigns
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCampaignLeadSchema = createInsertSchema(campaignLeads).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertCampaignCallLogSchema = createInsertSchema(campaignCallLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSuppressionSchema = createInsertSchema(suppressions);
+
+// Types for campaigns
+export type Campaign = typeof campaigns.$inferSelect;
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+
+export type CampaignLead = typeof campaignLeads.$inferSelect;
+export type InsertCampaignLead = z.infer<typeof insertCampaignLeadSchema>;
+
+export type CampaignCallLog = typeof campaignCallLogs.$inferSelect;
+export type InsertCampaignCallLog = z.infer<typeof insertCampaignCallLogSchema>;
+
+export type Suppression = typeof suppressions.$inferSelect;
+export type InsertSuppression = z.infer<typeof insertSuppressionSchema>;

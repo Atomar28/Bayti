@@ -1426,6 +1426,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register campaign routes
+  try {
+    const { registerCampaignRoutes } = await import('./routes/campaigns');
+    registerCampaignRoutes(app);
+    console.log('Campaign routes registered');
+  } catch (error) {
+    console.warn('Campaign routes failed to register:', error);
+  }
+  
+  // Initialize campaign workers
+  try {
+    await import('./workers/calls.worker.js');
+    console.log('Campaign call worker initialized');
+  } catch (error) {
+    console.warn('Campaign worker failed to initialize:', error);
+  }
+
   // Landing page route
   app.get("/landing", (req, res) => {
     res.sendFile("landing.html", { root: "client" });

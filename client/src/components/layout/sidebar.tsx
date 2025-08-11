@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Phone, ChartLine, PhoneIcon, Users, BarChart3, Settings, User, Home } from "lucide-react";
+import { Phone, ChartLine, PhoneIcon, Users, BarChart3, Settings, User, Home, Megaphone } from "lucide-react";
 
 interface SidebarProps {
   currentPage: string;
@@ -11,6 +11,7 @@ const navigation = [
   { name: "Appointments/Callbacks", href: "/appointments", icon: PhoneIcon },
   { name: "Leads", href: "/leads", icon: Users },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Auto-Dial Campaigns", href: "/campaigns", icon: Megaphone },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
