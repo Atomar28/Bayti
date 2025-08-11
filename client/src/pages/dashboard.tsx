@@ -25,13 +25,7 @@ export default function Dashboard() {
     refetchOnWindowFocus: true,
   });
 
-  const { data: scriptsData, isLoading: scriptsLoading } = useQuery({
-    queryKey: ["/api/call-scripts"],
-    refetchInterval: 60000, // Refresh every minute (scripts change less frequently)
-  });
-
   const recentCalls = (recentCallsData as any)?.callLogs || [];
-  const scripts = (scriptsData as any) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -236,6 +230,8 @@ export default function Dashboard() {
         <div className="space-y-6">
           <AICallLogs />
         </div>
+        
+        {/* Recent Activity Section */}
         <Card className="glass-card border-0 shadow-beautiful-lg">
           <CardHeader className="pb-6">
             <div className="flex items-center justify-between">
@@ -275,53 +271,6 @@ export default function Dashboard() {
                     <Badge className={`${getStatusColor(call.status)} font-medium px-3 py-1`}>
                       {formatStatus(call.status)}
                     </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold text-gray-900">AI Call Scripts</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                Manage <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {scriptsLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-16 bg-gray-200 rounded-lg"></div>
-                  </div>
-                ))}
-              </div>
-            ) : scripts.length === 0 ? (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Settings className="w-6 h-6 text-blue-600" />
-                </div>
-                <p className="text-gray-500 mb-4">No call scripts configured</p>
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Create Script
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {scripts.slice(0, 3).map((script: any) => (
-                  <div key={script.id} className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-gray-900">{script.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{script.description || "AI-powered real estate script"}</p>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="text-sm font-bold text-emerald-600">85%</p>
-                      <p className="text-xs text-gray-500">success rate</p>
-                    </div>
                   </div>
                 ))}
               </div>
