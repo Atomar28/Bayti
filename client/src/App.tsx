@@ -14,6 +14,7 @@ import Campaigns from "@/pages/Campaigns";
 import Pricing from "@/pages/Pricing";
 import Solutions from "@/pages/Solutions";
 import InteractiveCallDemo from "@/pages/InteractiveCallDemo";
+import EchoTest from "@/pages/EchoTest";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { useState, useEffect } from "react";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/pricing" component={Pricing} />
       <Route path="/solutions" component={Solutions} />
       <Route path="/interactive-demo" component={InteractiveCallDemo} />
+      <Route path="/echo-test" component={EchoTest} />
       <Route component={NotFound} />
     </Switch>
   );
