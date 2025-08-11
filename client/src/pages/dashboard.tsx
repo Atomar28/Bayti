@@ -10,7 +10,7 @@ import { TestCallDialog } from "@/components/ai/TestCallDialog";
 import { AICallLogs } from "@/components/ai/AICallLogs";
 import AppointmentsTab from "@/components/appointments/AppointmentsTab";
 import ProjectScriptsTab from "@/components/scripts/ProjectScriptsTab";
-import SettingsTab from "@/components/settings/SettingsTab";
+
 
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -77,19 +77,7 @@ export default function Dashboard() {
               <h1 className="text-5xl font-bold gradient-text tracking-tight">Welcome back, Agent John</h1>
               <p className="text-xl text-gray-600 max-w-2xl">Here's your call center overview for today - track your performance and manage leads efficiently</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                className="px-8 py-4 text-lg rounded-xl border-2 border-gray-300 hover:bg-white hover:shadow-beautiful transition-all duration-300 hover:scale-105" 
-                onClick={() => {
-                  const settingsTab = document.querySelector('[value="settings"]') as HTMLElement;
-                  if (settingsTab) settingsTab.click();
-                }}
-              >
-                <Settings className="w-5 h-5 mr-3" />
-                Quick Setup
-              </Button>
-            </div>
+
           </div>
         </div>
 
@@ -122,10 +110,7 @@ export default function Dashboard() {
               <Phone className="w-5 h-5" />
               <span className="font-medium">Call Logs</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-3 py-4 px-6 text-base rounded-xl transition-all duration-300">
-              <Settings className="w-5 h-5" />
-              <span className="font-medium">Settings</span>
-            </TabsTrigger>
+
           </TabsList>
 
           {/* Overview Tab */}
@@ -295,10 +280,7 @@ export default function Dashboard() {
             <AICallLogs />
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <SettingsTab />
-          </TabsContent>
+
         </Tabs>
       </div>
     </div>

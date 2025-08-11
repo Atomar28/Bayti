@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Plus, Edit, Trash2, Play, Save } from "lucide-react";
+import { Plus, Edit, Trash2, Play, Save, Clock, Globe } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { VoiceSettingsCard } from "@/components/settings/VoiceSettingsCard";
@@ -33,6 +33,12 @@ export default function Settings() {
     minBudget: 10000,
     maxBudget: 100000,
     region: "North America",
+    workingHours: {
+      start: "09:00",
+      end: "17:00",
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    },
+    bufferTime: 15,
   });
 
   const queryClient = useQueryClient();
@@ -200,6 +206,23 @@ export default function Settings() {
         companySizes: currentSizes.filter(s => s !== size),
       });
     }
+  };
+
+  const handleWorkingHoursChange = (field: string, value: any) => {
+    setAgentSettings(prev => ({
+      ...prev,
+      workingHours: {
+        ...prev.workingHours!,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setAgentSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -479,8 +502,145 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Working Hours & Availability */}
+        <Card className="mb-8 border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              Working Hours & Availability
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={agentSettings.workingHours?.start}
+                  onChange={(e) => handleWorkingHoursChange('start', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={agentSettings.workingHours?.end}
+                  onChange={(e) => handleWorkingHoursChange('end', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Appointment Buffer (minutes)</Label>
+                <Input
+                  type="number"
+                  value={agentSettings.bufferTime}
+                  onChange={(e) => handleInputChange('bufferTime', parseInt(e.target.value))}
+                  placeholder="15"
+                />
+              </div>
+            </div>
 
+            <div className="space-y-2">
+              <Label>Working Days</Label>
+              <div className="flex flex-wrap gap-2">
+                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                  <Button
+                    key={day}
+                    variant={agentSettings.workingHours?.days?.includes(day) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const currentDays = agentSettings.workingHours?.days || [];
+                      const newDays = currentDays.includes(day)
+                        ? currentDays.filter(d => d !== day)
+                        : [...currentDays, day];
+                      handleWorkingHoursChange('days', newDays);
+                    }}
+                  >
+                    {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* Lead Qualification Criteria */}
+        <Card className="mb-8 border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-emerald-600" />
+              Lead Qualification Criteria
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label>Minimum Budget</Label>
+                <Input
+                  type="number"
+                  value={agentSettings.minBudget}
+                  onChange={(e) => handleInputChange('minBudget', parseInt(e.target.value))}
+                  placeholder="1000"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Maximum Budget</Label>
+                <Input
+                  type="number"
+                  value={agentSettings.maxBudget}
+                  onChange={(e) => handleInputChange('maxBudget', parseInt(e.target.value))}
+                  placeholder="100000"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Target Industries</Label>
+              <div className="flex flex-wrap gap-2">
+                {['real_estate', 'construction', 'property_management', 'investment', 'commercial'].map((industry) => (
+                  <Button
+                    key={industry}
+                    variant={agentSettings.targetIndustries?.includes(industry) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = agentSettings.targetIndustries || [];
+                      const updated = current.includes(industry)
+                        ? current.filter(i => i !== industry)
+                        : [...current, industry];
+                      handleInputChange('targetIndustries', updated);
+                    }}
+                  >
+                    {industry.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Company Sizes</Label>
+              <div className="flex flex-wrap gap-2">
+                {['small', 'medium', 'large', 'enterprise'].map((size) => (
+                  <Button
+                    key={size}
+                    variant={agentSettings.companySizes?.includes(size) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const current = agentSettings.companySizes || [];
+                      const updated = current.includes(size)
+                        ? current.filter(s => s !== size)
+                        : [...current, size];
+                      handleInputChange('companySizes', updated);
+                    }}
+                  >
+                    {size.charAt(0).toUpperCase() + size.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
       </div>
       </div>
