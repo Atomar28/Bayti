@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayti Solutions – AI Calling Platform</title>
+    <meta name="description" content="Complete AI calling platform for modern sales teams. From cold calling to appointment booking with humanlike AI that never sleeps.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bayti-ai.com/solutions">
+    <meta property="og:title" content="Bayti Solutions – AI Calling Platform">
+    <meta property="og:description" content="Complete AI calling platform for modern sales teams with humanlike AI.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bayti-ai.com/solutions">
+    <meta property="twitter:title" content="Bayti Solutions – AI Calling Platform">
+    <meta property="twitter:description" content="Complete AI calling platform for modern sales teams with humanlike AI.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.8s ease-out',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V9.75a.75.75 0 00-.375-.65L12 7.5 8.25 9.1a.75.75 0 00-.375.65v11.25h4.5z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5l8.25 5.25v8.25H3.75V12.75L12 7.5z"/>
+                            <circle cx="12" cy="11" r="1.5" fill="currentColor" opacity="0.7"/>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        BaytiAI
+                    </span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/landing" class="text-gray-600 hover:text-gray-900 transition-colors">Home</a>
+                    <a href="/solutions.html" class="text-blue-600 font-semibold">Solutions</a>
+                    <a href="/pricing.html" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-24 pb-16">
+        <div class="container mx-auto px-4">
+            <!-- Hero Section -->
+            <div class="text-center max-w-4xl mx-auto mb-16 animate-fade-in">
+                <div class="inline-block mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                    AI-Powered Solutions
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+                    Complete AI calling platform for modern sales teams
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                    From cold calling to appointment booking, Bayti provides everything you need 
+                    to scale your outbound operations with humanlike AI that never sleeps.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                        Start Free Trial →
+                    </button>
+                    <button class="px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                        Watch Demo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Core Solutions -->
+            <div class="mb-20 animate-slide-up">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        Everything you need to scale outbound
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Our comprehensive platform combines AI calling, automation, and analytics 
+                        to deliver results that scale with your business.
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- AI Cold Calling -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8 card-hover relative">
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Most Popular</span>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">AI Cold Calling</h3>
+                        <p class="text-gray-600 mb-6">Fully automated outbound calling with human-like conversation capabilities</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Natural conversation flow with GPT-4o
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time objection handling
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Custom script management
+                            </li>
+                        </ul>
+                        <button class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            Start Calling →
+                        </button>
+                    </div>
+
+                    <!-- Appointment Booking -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8 card-hover">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Appointment Booking</h3>
+                        <p class="text-gray-600 mb-6">Smart calendar integration with automatic appointment scheduling</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time calendar sync
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Conflict detection
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Automated reminders
+                            </li>
+                        </ul>
+                        <button class="w-full px-6 py-3 border border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                            Book Demo
+                        </button>
+                    </div>
+
+                    <!-- Analytics & Insights -->
+                    <div class="bg-white rounded-2xl shadow-lg p-8 card-hover">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-6">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Analytics & Insights</h3>
+                        <p class="text-gray-600 mb-6">Comprehensive reporting and performance analytics for optimization</p>
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Real-time call monitoring
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Conversion rate tracking
+                            </li>
+                            <li class="flex items-center text-sm">
+                                <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                ROI calculation
+                            </li>
+                        </ul>
+                        <button class="w-full px-6 py-3 border border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                            View Analytics
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Benefits */
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 md:p-12 mb-20">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">
+                            Why teams choose Bayti
+                        </h2>
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <svg class="w-6 h-6 text-blue-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold text-lg mb-2">24/7 Operation</h3>
+                                    <p class="text-gray-600">Never miss an opportunity with round-the-clock calling</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <svg class="w-6 h-6 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold text-lg mb-2">Instant Scale</h3>
+                                    <p class="text-gray-600">Go from 10 to 10,000 calls without hiring more staff</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <svg class="w-6 h-6 text-purple-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold text-lg mb-2">Built-in Compliance</h3>
+                                    <p class="text-gray-600">Stay compliant with automatic regulatory adherence</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 shadow-lg">
+                        <h3 class="font-semibold text-lg mb-4">Platform Stats</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600">99.9%</div>
+                                <div class="text-sm text-gray-600">Uptime</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">3.2x</div>
+                                <div class="text-sm text-gray-600">ROI Average</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600">85%</div>
+                                <div class="text-sm text-gray-600">Connect Rate</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-orange-600">24/7</div>
+                                <div class="text-sm text-gray-600">Operation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Industry Solutions -->
+            <div class="mb-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">
+                        Built for your industry
+                    </h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Bayti adapts to the unique needs of different industries with 
+                        specialized workflows and compliance requirements.
+                    </p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Real Estate -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2">Real Estate</h3>
+                        <p class="text-gray-600 text-sm mb-4">Purpose-built for real estate professionals</p>
+                        <ul class="space-y-1 text-xs text-gray-600">
+                            <li>• Property lead qualification</li>
+                            <li>• Open house invitations</li>
+                            <li>• Listing appointments</li>
+                        </ul>
+                    </div>
+
+                    <!-- B2B Sales -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2">B2B Sales</h3>
+                        <p class="text-gray-600 text-sm mb-4">Enterprise-grade for complex sales</p>
+                        <ul class="space-y-1 text-xs text-gray-600">
+                            <li>• Lead qualification</li>
+                            <li>• Demo scheduling</li>
+                            <li>• Pipeline acceleration</li>
+                        </ul>
+                    </div>
+
+                    <!-- Financial Services -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2">Financial</h3>
+                        <p class="text-gray-600 text-sm mb-4">Compliant financial calling</p>
+                        <ul class="space-y-1 text-xs text-gray-600">
+                            <li>• Investment consultations</li>
+                            <li>• Insurance qualification</li>
+                            <li>• Compliance calls</li>
+                        </ul>
+                    </div>
+
+                    <!-- SaaS & Technology -->
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2">SaaS & Tech</h3>
+                        <p class="text-gray-600 text-sm mb-4">Specialized for software companies</p>
+                        <ul class="space-y-1 text-xs text-gray-600">
+                            <li>• Product demos</li>
+                            <li>• Trial conversions</li>
+                            <li>• Upselling campaigns</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl p-8 md:p-12">
+                <h2 class="text-3xl font-bold mb-4">
+                    Ready to transform your outbound sales?
+                </h2>
+                <p class="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+                    Join hundreds of sales teams already using Bayti to scale their outbound operations 
+                    and drive predictable revenue growth.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+                        Start Free Trial →
+                    </button>
+                    <button class="px-8 py-3 border border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-colors">
+                        Schedule Demo
+                    </button>
+                </div>
+                <p class="text-sm mt-4 opacity-75">
+                    No credit card required • 14-day free trial • Setup in 5 minutes
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
