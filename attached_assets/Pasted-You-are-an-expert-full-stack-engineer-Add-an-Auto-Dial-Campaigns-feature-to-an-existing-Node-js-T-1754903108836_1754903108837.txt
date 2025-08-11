@@ -1,0 +1,205 @@
+You are an expert full-stack engineer. Add an “Auto-Dial Campaigns” feature to an existing Node.js/TypeScript + Express + React (Vite) project that already has a working manual calling flow for our AI agent “Bayti”. Keep manual calling untouched, but add:
+
+TECH CHOICES
+- Backend: Node.js + TypeScript + Express
+- Telephony: Twilio Voice (TwiML + Webhooks; Media Streams optional)
+- Queue: BullMQ + Redis
+- DB: Postgres (via Prisma)
+- TTS: ElevenLabs (preferred) with SSML post-processing fallback to Amazon Polly Neural
+- LLM: (assume existing OpenAI usage) – expose a function `renderAgentUtterance(leadCtx)` that returns natural text; we’ll wrap it into SSML
+- Frontend: React + Tailwind; component library minimal
+- Timezone default: Asia/Dubai
+
+GOALS
+1) Upload a CSV/XLSX of leads -> create a “Campaign”; infer/allow mapping of Phone/Name/Email/Notes + arbitrary columns to `custom`.
+2) Auto-dial each lead sequentially via a queue (with configurable concurrency, inter-call delay, business hours).
+3) Humanized agent voice using ElevenLabs streaming or pre-generated audio; otherwise Twilio <Say> with SSML.
+4) Compliance: DNC suppression, opt-out during call (say “stop” or keypad “9”), retry policy, rate limits, local business hours.
+5) Keep existing Manual Dial tab unmodified; add a new “Campaigns” tab with full controls.
+
+FOLDER & FILES (create/modify)
+- /server
+  - src/index.ts (register new routes + health)
+  - src/env.ts (load env)
+  - src/db/prisma.schema (Prisma models below)
+  - src/db/client.ts
+  - src/queues/calls.queue.ts (BullMQ queue + scheduler)
+  - src/workers/calls.worker.ts (call placement worker)
+  - src/routes/campaigns.upload.ts (file upload + parsing)
+  - src/routes/campaigns.control.ts (start/pause/resume/stop)
+  - src/routes/voice.twiml.ts (TwiML generator per lead)
+  - src/services/telephony.ts (Twilio client, helpers)
+  - src/services/tts.ts (ElevenLabs + Polly; streaming or pregen)
+  - src/services/ssml.ts (inject pauses/emphasis; randomize prosody)
+  - src/services/llm.ts (renderAgentUtterance placeholder uses existing LLM)
+  - src/services/compliance.ts (DNC, business hours check)
+  - src/utils/parseLeads.ts (CSV/XLSX -> normalized leads)
+- /web
+  - src/pages/Campaigns.tsx (UI page)
+  - src/components/CampaignUpload.tsx
+  - src/components/CampaignControls.tsx
+  - src/components/CampaignTable.tsx
+  - src/components/ColumnMapper.tsx
+
+ENV VARS (add to .env)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM_E164=
+PUBLIC_BASE_URL=           # e.g., https://your-repl.dev
+REDIS_URL=                 # or host/port
+ELEVENLABS_API_KEY=
+POLLY_REGION=
+POLLY_ACCESS_KEY_ID=
+POLLY_SECRET_ACCESS_KEY=
+DATABASE_URL=postgres://...
+DEFAULT_TIMEZONE=Asia/Dubai
+MAX_CONCURRENT_CALLS=3
+INTER_CALL_MS=1500
+
+PRISMA MODELS (postgres)
+model Campaign {
+  id            String   @id @default(cuid())
+  name          String
+  status        CampaignStatus @default(DRAFT)
+  pacingMaxConcurrent Int @default(2)
+  interCallMs   Int @default(1500)
+  timezone      String @default("Asia/Dubai")
+  businessHours Json    @default("{\"start\":\"09:30\",\"end\":\"19:30\",\"days\":[1,2,3,4,5,6]}") // Sun=0
+  scriptId      String?
+  createdAt     DateTime @default(now())
+  createdBy     String?
+  leads         Lead[]
+}
+
+enum CampaignStatus { DRAFT RUNNING PAUSED STOPPED DONE }
+
+model Lead {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  fullName    String?
+  phoneE164   String
+  email       String?
+  notes       String?
+  custom      Json?
+  status      LeadStatus @default(PENDING)
+  attempts    Int @default(0)
+  lastError   String?
+  lastCallSid String?
+  updatedAt   DateTime @updatedAt
+  callLogs    CallLog[]
+}
+
+enum LeadStatus { PENDING DIALING CONNECTED COMPLETED FAILED RETRY DO_NOT_CALL }
+
+model CallLog {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  callSid     String?
+  status      String?
+  durationSec Int?
+  recordingUrl String?
+  transcript  String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+model Suppression {
+  phoneE164 String @id
+  reason    String?
+  addedAt   DateTime @default(now())
+}
+
+BACKEND: KEY ENDPOINTS
+1) POST /api/campaigns/upload (multipart; file=CSV|XLSX; body: name, pacingMaxConcurrent?, interCallMs?, timezone?)
+   - Parse rows, infer column mapping (phone/name/email/notes). Normalize to E.164 (default region AE).
+   - Drop invalid numbers and suppressed numbers.
+   - Create Campaign + Leads (status=PENDING).
+   - Return {campaignId, totalImported}
+
+2) POST /api/campaigns/:id/start
+   - Set status=RUNNING, enqueue all PENDING leads to BullMQ queue “bayti-auto-dial”
+   - Respect MAX_CONCURRENT_CALLS & campaign.pacingMaxConcurrent
+
+3) POST /api/campaigns/:id/pause -> status=PAUSED
+4) POST /api/campaigns/:id/resume -> status=RUNNING
+5) POST /api/campaigns/:id/stop -> status=STOPPED
+6) GET  /api/campaigns/:id/summary -> counts by LeadStatus, progress
+7) GET  /api/campaigns/:id/leads -> paginated leads w/ filters
+8) POST /api/suppression -> add to DNC {phoneE164, reason}
+
+TWILIO WEBHOOKS
+- POST /api/voice/twiml?campaignId=...&leadId=...
+  - Fetch lead + campaign, `renderAgentUtterance(leadCtx)` to get natural text
+  - Convert to SSML with minor randomization:
+    * Insert <break time="200ms"/> between sentences
+    * Use <emphasis level="moderate"> on value props
+    * Wrap with <prosody rate="medium">; randomize rate ±5%, pitch ±2%
+  - Prefer `<Play>` with ElevenLabs streaming URL generated by `tts.getStreamingUrl(ssml)`
+  - Fallback: `twiml.say({ voice: "Polly-Matthew-Neural", language: "en-US" }, ssml)`
+  - Include “press 9 to opt out” branch: `<Gather>` listens for DTMF 9 or “stop” → mark DO_NOT_CALL + add suppression
+
+QUEUE WORKER LOGIC (/server/src/workers/calls.worker.ts)
+- Concurrency = min(env.MAX_CONCURRENT_CALLS, campaign.pacingMaxConcurrent)
+- For each job:
+  1) Check campaign.status === RUNNING and business hours (Asia/Dubai, or campaign.timezone)
+  2) If outside hours, delay job to next window start
+  3) Mark lead DIALING; place call:
+     twilio.calls.create({ to, from: TWILIO_FROM_E164, url: `${PUBLIC_BASE_URL}/api/voice/twiml?...` })
+  4) Handle errors:
+     attempts++ ; if attempts < 3 → status=RETRY with exponential backoff; else FAILED
+  5) Inter-call delay: wait campaign.interCallMs before resolving job to pace calls
+
+HUMANIZATION DETAILS
+- Create /server/src/services/ssml.ts with function `toSSML(text, personaOpts)`:
+  - Insert micro-pauses 150-300ms
+  - Randomize prosody (rate ±5%, pitch ±2%)
+  - Add short acknowledgements at paragraph starts: e.g., “Right,” “Sure,” “Great question,” (10–15% chance)
+- /server/src/services/tts.ts:
+  - If ElevenLabs:
+     - provide `getStreamingUrl(ssml)`: use audio streaming; else `synthesize(ssml)` -> signed URL stored temp
+     - voice settings: stability ~0.4, similarity_boost ~0.7
+  - Else Polly Neural with SSML enabled
+- /server/src/services/compliance.ts:
+  - `isBusinessHours(now, tz, hoursJson)`
+  - `isSuppressed(phoneE164)`
+  - `recordOptOut(phoneE164, reason)`
+- /server/src/utils/parseLeads.ts:
+  - Use `xlsx` + `papaparse` + `libphonenumber-js`
+  - Map probable phone column: “phone”, “mobile”, “phone_number”, etc.
+  - Return normalized array with E.164 and custom JSON (original row)
+
+FRONTEND (React)
+Create a “Campaigns” page with:
+- Upload Card:
+  - Drag+drop CSV/XLSX
+  - Optional column mapper (detect & allow override)
+  - Inputs: Campaign name, Max concurrent, Inter-call delay (ms), Timezone, Business hours picker
+  - Submit -> /api/campaigns/upload
+- Controls Card:
+  - Buttons: Start, Pause, Resume, Stop (call respective endpoints)
+  - Live metrics: progress bar (completed/total), counts by status
+- Leads Table:
+  - Columns: Name, Phone, Status, Attempts, Last Error
+  - Filters: status, search
+  - “Mark DNC” action button per row
+- Keep existing Manual Dial tab as is
+
+ACCEPTANCE CRITERIA
+- I can upload a CSV/XLSX, see imported count, and a new Campaign created
+- Clicking Start begins calling; I can see live progress and active calls
+- Concurrency and pacing work; calls respect business hours (Asia/Dubai by default)
+- “9” or the word “stop” during a call adds the number to Suppression and halts future calls to it
+- Humanized voice: audible micro-pauses and natural tone; ElevenLabs used when key present, Polly fallback otherwise
+- Manual Dial remains fully functional and unchanged
+- All new code is TypeScript, lint-clean, with basic error handling and logs
+
+SECURITY & OPS
+- Validate file size (<=15MB) and rows (<=50k per campaign)
+- Rate-limit campaign Start/Stop endpoints
+- Sanitize SSML input; never echo raw user input into SSML without escaping
+- Store call logs and errors; expose basic logs in the UI
+- Provide seed script for Prisma + a README snippet on required env vars
+
+Now generate all files, routes, Prisma schema, and React components as outlined, wiring them end-to-end. Include minimal unit tests for `toSSML`, `isBusinessHours`, and `parseLeads`.
