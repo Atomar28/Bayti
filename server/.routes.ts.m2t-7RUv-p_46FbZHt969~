@@ -1581,8 +1581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (message.type === 'audio_chunk' && orchestrator) {
           // Process audio chunk through orchestrator
           const audioData = Buffer.from(message.data.audioData, 'base64');
-          console.log('Processing audio chunk, size:', audioData.length);
-          await orchestrator.processAudioChunk(audioData, Date.now());
+          await orchestrator.processAudioChunk(audioData);
         }
       } catch (error) {
         console.error('Error processing realtime message:', error);
