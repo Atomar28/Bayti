@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,10 +90,7 @@ export default function SettingsTab() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (data: Partial<AgentSettings>) => {
-      return await apiRequest("/api/agent-settings", {
-        method: "POST",
-        body: data
-      });
+      return await apiRequest("/api/agent-settings", "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -192,13 +190,12 @@ export default function SettingsTab() {
           <p className="text-gray-600 mb-4">
             Voice configuration and AI agent settings are available in the main Settings page.
           </p>
-          <Button 
-            onClick={() => window.location.href = '/settings'}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Configure Voice Settings
-          </Button>
+          <Link href="/settings">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Settings className="w-4 h-4 mr-2" />
+              Configure Voice Settings
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
