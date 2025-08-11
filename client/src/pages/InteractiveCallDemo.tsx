@@ -21,7 +21,6 @@ export default function InteractiveCallDemo() {
   // Audio state
   const [micPermission, setMicPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [micLevel, setMicLevel] = useState(0);
 
   // Conversation state
   const [partialTranscript, setPartialTranscript] = useState('');
@@ -264,14 +263,6 @@ export default function InteractiveCallDemo() {
 
         const inputBuffer = event.inputBuffer.getChannelData(0);
         
-        // Calculate RMS for microphone level monitoring
-        let sum = 0;
-        for (let i = 0; i < inputBuffer.length; i++) {
-          sum += inputBuffer[i] * inputBuffer[i];
-        }
-        const rms = Math.sqrt(sum / inputBuffer.length);
-        setMicLevel(rms); // Update mic level for visual feedback
-        
         // Convert Float32Array to Int16Array (PCM16)
         const pcm16 = new Int16Array(inputBuffer.length);
         for (let i = 0; i < inputBuffer.length; i++) {
@@ -283,9 +274,12 @@ export default function InteractiveCallDemo() {
         const pcm16Array = new Uint8Array(pcm16.buffer);
         const audioBase64 = btoa(String.fromCharCode.apply(null, Array.from(pcm16Array)));
         
-        // Only send if there's meaningful audio content
+        // Calculate RMS to check if audio has meaningful content
+        const rms = Math.sqrt(inputBuffer.reduce((sum, sample) => sum + sample * sample, 0) / inputBuffer.length);
+        console.log('🎵 Audio RMS level:', rms.toFixed(6), '- Sending:', rms >= 0.001);
+        
         if (rms < 0.001) {
-          console.log('🔇 Audio too quiet, RMS:', rms.toFixed(6), '- Skipping');
+          // Skip very quiet samples to avoid sending silence
           return;
         }
         

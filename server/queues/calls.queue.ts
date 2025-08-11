@@ -1,9 +1,6 @@
-// Temporarily disabled - BullMQ requires Redis
-// import { Queue } from 'bullmq';
-// import Redis from 'ioredis';
+import { Queue } from 'bullmq';
+import Redis from 'ioredis';
 
-// Temporarily disabled - BullMQ requires Redis
-/*
 // Redis connection with proper configuration
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
@@ -11,7 +8,6 @@ const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   enableReadyCheck: false,
   lazyConnect: true,
 });
-*/
 
 export interface CallJobData {
   campaignId: string;
@@ -20,8 +16,6 @@ export interface CallJobData {
   attempt: number;
 }
 
-// Temporarily disabled - BullMQ requires Redis
-/*
 // Create the auto-dial queue
 export const callQueue = new Queue<CallJobData>('bayti-auto-dial', {
   connection: redis,
@@ -35,19 +29,16 @@ export const callQueue = new Queue<CallJobData>('bayti-auto-dial', {
     },
   },
 });
-*/
 
 export async function addCallJob(data: CallJobData, delay: number = 0): Promise<void> {
-  // Temporarily disabled - BullMQ requires Redis
-  console.log('Call job would be queued:', data, 'delay:', delay);
-  // await callQueue.add(
-  //   `call-${data.leadId}`,
-  //   data,
-  //   {
-  //     delay,
-  //     jobId: `call-${data.leadId}-${Date.now()}`, // Unique ID to prevent duplicates
-  //   }
-  // );
+  await callQueue.add(
+    `call-${data.leadId}`,
+    data,
+    {
+      delay,
+      jobId: `call-${data.leadId}-${Date.now()}`, // Unique ID to prevent duplicates
+    }
+  );
 }
 
 export async function addBulkCallJobs(jobs: CallJobData[], batchSize: number = 50): Promise<void> {

@@ -1,6 +1,5 @@
-// Temporarily disabled - BullMQ requires Redis
-// import { Worker, Job } from 'bullmq';
-// import Redis from 'ioredis';
+import { Worker, Job } from 'bullmq';
+import Redis from 'ioredis';
 import { db } from '../db';
 import { campaigns, campaignLeads, campaignCallLogs } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
@@ -11,18 +10,13 @@ import { toSSML } from '../services/ssml';
 import { ttsService } from '../services/tts';
 import { CallJobData } from '../queues/calls.queue';
 
-// Temporarily disabled - BullMQ requires Redis
-/*
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
   retryDelayOnFailover: 100,
   enableReadyCheck: false,
   lazyConnect: true,
 });
-*/
 
-// Temporarily disabled - BullMQ requires Redis
-/*
 export const callWorker = new Worker<CallJobData>(
   'bayti-auto-dial',
   async (job: Job<CallJobData>) => {
@@ -207,10 +201,3 @@ callWorker.on('stalled', async (jobId) => {
 });
 
 console.log('Call worker started with concurrency:', parseInt(process.env.MAX_CONCURRENT_CALLS || '3'));
-*/
-
-// Temporary placeholder exports for compatibility
-export const callWorker = {
-  on: () => {},
-  process: () => {}
-};
